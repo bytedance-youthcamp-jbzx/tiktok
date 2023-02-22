@@ -70,13 +70,12 @@ func uploadCover(playUrl string, coverTitle string) error {
 // VideoPublish 上传视频并获取封面
 func VideoPublish(data []byte, videoTitle string, coverTitle string) error {
 	playUrl, err := uploadVideo(data, videoTitle)
+	if err != nil {
+		return err
+	}
 	err = uploadCover(playUrl, coverTitle)
 	if err != nil {
 		return err
 	}
-	return err
-}
-
-func handleVideoPublish() {
-
+	return nil
 }

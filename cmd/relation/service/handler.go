@@ -168,7 +168,7 @@ func (s *RelationServiceImpl) RelationFollowerList(ctx context.Context, req *rel
 		return res, nil
 	}
 	if userID != claims.Id {
-		logger.Errorf("当前登录用户%d无法访问其他用户的关注列表%d", claims.Id, userID)
+		logger.Errorf("当前登录用户%d无法访问其他用户的粉丝列表%d", claims.Id, userID)
 		res := &relation.RelationFollowerListResponse{
 			StatusCode: -1,
 			StatusMsg:  "当前登录用户无法访问其他用户的粉丝列表",
@@ -272,7 +272,7 @@ func (s *RelationServiceImpl) RelationFriendList(ctx context.Context, req *relat
 		logger.Errorf("当前登录用户%d无法访问其他用户的朋友列表%d", claims.Id, userID)
 		res := &relation.RelationFriendListResponse{
 			StatusCode: -1,
-			StatusMsg:  "当前登录用户无法访问其他用户的粉丝列表",
+			StatusMsg:  "当前登录用户无法访问其他用户的朋友列表",
 		}
 		return res, nil
 	}

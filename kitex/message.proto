@@ -1,0 +1,39 @@
+syntax = "proto3";
+option go_package = "message";
+package message;
+
+//  ====================================聊天记录===================================
+message Message{
+  int64 id = 1;       // 消息id
+  int64 to_user_id = 2; // 该消息接收者的id
+  int64 from_user_id = 3; // 该消息发送者的id
+  string content = 4; // 消息内容
+  int64 create_time = 5;      // 消息创建时间
+}
+message MessageChatRequest{
+  string token = 1;            // 用户鉴权token
+  int64 to_user_id = 2;        // 对方用户id
+  int64 pre_msg_time = 3;      // 上次最新消息时间
+}
+message MessageChatResponse{
+  int32 status_code = 1;       // 状态码,0成功,其他值失败
+  string status_msg = 2;       // 返回状态描述
+  repeated Message message_list = 3;    // 消息列表
+}
+
+//  =====================================消息发送===================================
+message MessageActionRequest{
+  string token = 1;   //用户鉴权token
+  int64 to_user_id = 2; //对方用户id
+  int32 action_type = 3; //1-发送消息
+  string content = 4;
+}
+message MessageActionResponse{
+  int32 status_code = 1;       // 状态码,0成功,其他值失败
+  string status_msg = 2;       // 返回状态描述
+}
+
+service MessageService{
+  rpc MessageChat (MessageChatRequest) returns (MessageChatResponse);
+  rpc MessageAction (MessageActionRequest) returns (MessageActionResponse);
+}

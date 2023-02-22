@@ -13,3 +13,28 @@
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+
+# Default ignored files
+/shelf/
+/workspace.xml
+# Editor-based HTTP Client requests
+/httpRequests/
+# Datasource local storage ignored files
+/dataSources/
+/dataSources.local.xml
+
+
+/.idea/
+#/idl/
+/logs/
+/.vscode/
+# /config/db.yml
+/scripts/microservice/logs/
+/cmd/*/logs/
+/pkg/*/logs/
+/dal/db/logs/
+/scripts/mysql.md
+/*/*/logs
+/cmd/api/config
+/.DS_Store
+/cmd/.DS_Store

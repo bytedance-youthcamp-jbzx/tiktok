@@ -1,0 +1,1 @@
+go run ../../cmd/relation/main.go

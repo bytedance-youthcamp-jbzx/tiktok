@@ -32,10 +32,10 @@ func (s *RelationServiceImpl) RelationAction(ctx context.Context, req *relation.
 	toUserID := req.ToUserId
 
 	if userID == toUserID {
-		logger.Errorln("操作非法：用户无法关注自己")
+		logger.Errorf("操作非法：用户无法成为自己的粉丝：%d", userID)
 		res := &relation.RelationActionResponse{
 			StatusCode: -1,
-			StatusMsg:  "操作非法：用户无法关注自己",
+			StatusMsg:  "操作非法：用户无法成为自己的粉丝",
 		}
 		return res, nil
 	}

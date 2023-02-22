@@ -30,6 +30,15 @@ func (s *RelationServiceImpl) RelationAction(ctx context.Context, req *relation.
 	}
 	userID := claims.Id
 	toUserID := req.ToUserId
+
+	if userID == toUserID {
+		logger.Errorf("操作非法：用户无法成为自己的粉丝：%d", userID)
+		res := &relation.RelationActionResponse{
+			StatusCode: -1,
+			StatusMsg:  "操作非法：用户无法成为自己的粉丝",
+		}
+		return res, nil
+	}
 	if req.ActionType != 1 && req.ActionType != 2 {
 		logger.Errorln("action_type 格式错误")
 		res := &relation.RelationActionResponse{

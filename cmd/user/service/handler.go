@@ -3,12 +3,12 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/bytedance-youthcamp-jbzx/dousheng/dal/db"
-	"github.com/bytedance-youthcamp-jbzx/dousheng/internal/tool"
-	user "github.com/bytedance-youthcamp-jbzx/dousheng/kitex/kitex_gen/user"
-	"github.com/bytedance-youthcamp-jbzx/dousheng/pkg/jwt"
-	"github.com/bytedance-youthcamp-jbzx/dousheng/pkg/minio"
-	"github.com/bytedance-youthcamp-jbzx/dousheng/pkg/zap"
+	"github.com/bytedance-youthcamp-jbzx/tiktok/dal/db"
+	"github.com/bytedance-youthcamp-jbzx/tiktok/internal/tool"
+	user "github.com/bytedance-youthcamp-jbzx/tiktok/kitex/kitex_gen/user"
+	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/jwt"
+	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/minio"
+	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/zap"
 	"math/rand"
 	"time"
 )
@@ -23,8 +23,12 @@ func (s *UserServiceImpl) Register(ctx context.Context, req *user.UserRegisterRe
 	// 检查用户名是否冲突
 	usr, err := db.GetUserByName(ctx, req.Username)
 	if err != nil {
-		logger.Errorf("发生错误：%v", err.Error())
-		return nil, err
+		logger.Errorln(err.Error())
+		res := &user.UserRegisterResponse{
+			StatusCode: -1,
+			StatusMsg:  "注册失败：服务器内部错误",
+		}
+		return res, nil
 	} else if usr != nil {
 		logger.Errorln("该用户名已存在")
 		res := &user.UserRegisterResponse{
@@ -36,29 +40,43 @@ func (s *UserServiceImpl) Register(ctx context.Context, req *user.UserRegisterRe
 
 	// 创建user
 	rand.Seed(time.Now().UnixMilli())
-	if err := db.CreateUsers(ctx, []*db.User{{
+	usr = &db.User{
 		UserName: req.Username,
 		Password: tool.Md5Encrypt(req.Password),
 		Avatar:   fmt.Sprintf("default%d.png", rand.Intn(10)),
-	}}); err != nil {
-		logger.Errorf("发生错误：%v", err.Error())
+	}
+	if err := db.CreateUser(ctx, usr); err != nil {
+		logger.Errorln(err.Error())
 		res := &user.UserRegisterResponse{
 			StatusCode: -1,
-			StatusMsg:  "服务器内部错误：注册失败",
+			StatusMsg:  "注册失败：服务器内部错误",
 		}
 		return res, nil
 	}
 
+	//if err := db.CreateUsers(ctx, []*db.User{{
+	//	UserName: req.Username,
+	//	Password: tool.Md5Encrypt(req.Password),
+	//	Avatar:   fmt.Sprintf("default%d.png", rand.Intn(10)),
+	//}}); err != nil {
+	//	logger.Errorf("发生错误：%v", err.Error())
+	//	res := &user.UserRegisterResponse{
+	//		StatusCode: -1,
+	//		StatusMsg:  "注册失败：服务器内部错误",
+	//	}
+	//	return res, nil
+	//}
+
 	// 获取用户id
-	usr, err = db.GetUserByName(ctx, req.Username)
-	if err != nil || usr == nil {
-		logger.Errorf("发生错误：%v", err.Error())
-		res := &user.UserRegisterResponse{
-			StatusCode: -1,
-			StatusMsg:  "服务器内部错误：注册失败",
-		}
-		return res, nil
-	}
+	//usr, err = db.GetUserByName(ctx, req.Username)
+	//if err != nil || usr == nil {
+	//	logger.Errorf("发生错误：%v", err.Error())
+	//	res := &user.UserRegisterResponse{
+	//		StatusCode: -1,
+	//		StatusMsg:  "注册失败：服务器内部错误",
+	//	}
+	//	return res, nil
+	//}
 
 	//生成token
 	claims := jwt.CustomClaims{Id: int64(usr.ID)}
@@ -88,8 +106,12 @@ func (s *UserServiceImpl) Login(ctx context.Context, req *user.UserLoginRequest)
 	// 根据用户名获取密码
 	usr, err := db.GetUserByName(ctx, req.Username)
 	if err != nil {
-		logger.Errorf("发生错误：%v", err.Error())
-		return nil, err
+		logger.Errorln(err.Error())
+		res := &user.UserLoginResponse{
+			StatusCode: -1,
+			StatusMsg:  "登录失败：服务器内部错误",
+		}
+		return res, nil
 	} else if usr == nil {
 		res := &user.UserLoginResponse{
 			StatusCode: -1,

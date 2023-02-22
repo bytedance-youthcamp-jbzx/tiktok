@@ -2,10 +2,10 @@
 package service
 
 import (
-	"github.com/bytedance-youthcamp-jbzx/dousheng/internal/tool"
-	"github.com/bytedance-youthcamp-jbzx/dousheng/pkg/jwt"
-	"github.com/bytedance-youthcamp-jbzx/dousheng/pkg/rabbitmq"
-	"github.com/bytedance-youthcamp-jbzx/dousheng/pkg/zap"
+	"github.com/bytedance-youthcamp-jbzx/tiktok/internal/tool"
+	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/jwt"
+	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/rabbitmq"
+	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/zap"
 )
 
 var (

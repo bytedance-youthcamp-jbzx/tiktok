@@ -3,13 +3,13 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"github.com/bytedance-youthcamp-jbzx/dousheng/dal/db"
-	"github.com/bytedance-youthcamp-jbzx/dousheng/dal/redis"
-	"github.com/bytedance-youthcamp-jbzx/dousheng/internal/tool"
-	relation "github.com/bytedance-youthcamp-jbzx/dousheng/kitex/kitex_gen/relation"
-	user "github.com/bytedance-youthcamp-jbzx/dousheng/kitex/kitex_gen/user"
-	"github.com/bytedance-youthcamp-jbzx/dousheng/pkg/minio"
-	"github.com/bytedance-youthcamp-jbzx/dousheng/pkg/zap"
+	"github.com/bytedance-youthcamp-jbzx/tiktok/dal/db"
+	"github.com/bytedance-youthcamp-jbzx/tiktok/dal/redis"
+	"github.com/bytedance-youthcamp-jbzx/tiktok/internal/tool"
+	relation "github.com/bytedance-youthcamp-jbzx/tiktok/kitex/kitex_gen/relation"
+	user "github.com/bytedance-youthcamp-jbzx/tiktok/kitex/kitex_gen/user"
+	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/minio"
+	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/zap"
 )
 
 // RelationServiceImpl implements the last service interface defined in the IDL.

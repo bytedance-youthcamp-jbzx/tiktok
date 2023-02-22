@@ -93,6 +93,23 @@ func CreateUsers(ctx context.Context, users []*User) error {
 	return err
 }
 
+// CreateUser
+//
+//	@Description: 新增一条用户数据
+//	@Date 2023-02-22 11:47:43
+//	@param ctx 数据库操作上下文
+//	@param users 用户数据
+//	@return error
+func CreateUser(ctx context.Context, user *User) error {
+	err := GetDB().Clauses(dbresolver.Write).WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(user).Error; err != nil {
+			return err
+		}
+		return nil
+	})
+	return err
+}
+
 // GetUserByName
 //
 //	@Description: 根据用户名获取用户数据列表

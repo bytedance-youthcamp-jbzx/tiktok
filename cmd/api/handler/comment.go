@@ -49,6 +49,7 @@ func CommentAction(ctx context.Context, c *app.RequestContext) {
 				},
 				Comment: nil,
 			})
+			return
 		}
 		req.CommentText = commentText
 	} else if actionType == 2 {

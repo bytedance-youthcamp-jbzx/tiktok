@@ -1,0 +1,20 @@
+server:
+  name: "TiktokFeedServer"
+  host: 0.0.0.0
+  port: 8086
+
+rpc:
+  host: 127.0.0.1
+  port: 50056
+
+JWT:
+  signingKey: "signingKey"
+
+video:
+  maxSizeLimit: 50
+
+etcd:
+  host: 0.0.0.0
+  port: 2379
+password:
+  salt: "jbzx"

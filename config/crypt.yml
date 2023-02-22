@@ -1,0 +1,3 @@
+rsa:
+  tiktok_message_encrypt_public_key: ""
+  tiktok_message_decrypt_private_key: ""

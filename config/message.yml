@@ -1,0 +1,15 @@
+server:
+  name: "TiktokMessageServer"
+  host: 0.0.0.0
+  port: 8083
+
+rpc:
+  host: 127.0.0.1
+  port: 50053
+
+JWT:
+  signingKey: "signingKey"
+
+etcd:
+  host: 0.0.0.0
+  port: 2379

@@ -1,0 +1,57 @@
+syntax = "proto3";
+option go_package = "user";
+package user;
+
+//  =========================用户注册============================
+message UserRegisterRequest {
+  string username = 1;  // 注册用户名，最长32个字符
+  string password = 2;  // 密码，最长32个字符
+}
+message UserRegisterResponse {
+  int32 status_code = 1;
+  string status_msg = 2;
+  int64 user_id = 3;
+  string token = 4;
+}
+
+//  ==========================用户登录============================
+message UserLoginRequest {
+  string username = 1;
+  string password = 2;
+}
+message UserLoginResponse {
+  int32 status_code = 1;
+  string status_msg = 2;
+  int64 user_id = 3;
+  string token = 4;
+}
+
+//  ===========================用户信息===========================
+message User {
+  int64 id = 1; // 用户id
+  string name = 2;  // 用户名称
+  int64 follow_count = 3; // 关注总数
+  int64 follower_count = 4; // 粉丝总数
+  bool is_follow = 5; // true-已关注，false-未关注
+  string avatar = 6;  // 用户头像
+  string background_image = 7;  // 用户个人页顶部大图
+  string signature = 8; // 个人简介
+  int64 total_favorited = 9;  // 获赞数量
+  int64 work_count = 10;  // 作品数量
+  int64 favorite_count = 11;  // 点赞数量
+}
+message UserInfoRequest {
+  int64 user_id = 1;
+  string token = 2;
+}
+message UserInfoResponse {
+  int32 status_code = 1;
+  string status_msg = 2;
+  User user = 3;
+}
+
+service UserService {
+  rpc Register(UserRegisterRequest) returns (UserRegisterResponse){}
+  rpc Login(UserLoginRequest) returns (UserLoginResponse){}
+  rpc UserInfo(UserInfoRequest) returns (UserInfoResponse) {}
+}

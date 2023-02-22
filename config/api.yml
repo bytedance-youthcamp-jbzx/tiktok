@@ -1,0 +1,21 @@
+server:
+  name: "TiktokAPIServer"
+  host: 0.0.0.0
+  port: 8089
+  limit: 
+    capacity: 200
+    rate: 20
+    tokenInit : 128  # 初始令牌个数
+
+JWT:
+  signingKey: "signingKey"
+
+Etcd:
+  Enable: true
+  host: 0.0.0.0
+  port: 2379
+
+tls:
+  enable: true
+  tiktok_tls_key: ""
+  tiktok_tls_cert: ""

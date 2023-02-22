@@ -66,6 +66,25 @@ func (s *RelationServiceImpl) RelationFollowList(ctx context.Context, req *relat
 	logger := zap.InitLogger()
 	userID := req.UserId
 
+	// 解析token,获取用户id
+	claims, err := Jwt.ParseToken(req.Token)
+	if err != nil {
+		logger.Errorln(err.Error())
+		res := &relation.RelationFollowListResponse{
+			StatusCode: -1,
+			StatusMsg:  "token 解析错误",
+		}
+		return res, nil
+	}
+	if userID != claims.Id {
+		logger.Errorf("当前登录用户%d无法访问其他用户的关注列表%d", claims.Id, userID)
+		res := &relation.RelationFollowListResponse{
+			StatusCode: -1,
+			StatusMsg:  "当前登录用户无法访问其他用户的关注列表",
+		}
+		return res, nil
+	}
+
 	// 从数据库获取关注列表
 	followings, err := db.GetFollowingListByUserID(ctx, userID)
 	if err != nil {
@@ -137,6 +156,25 @@ func (s *RelationServiceImpl) RelationFollowList(ctx context.Context, req *relat
 func (s *RelationServiceImpl) RelationFollowerList(ctx context.Context, req *relation.RelationFollowerListRequest) (resp *relation.RelationFollowerListResponse, err error) {
 	logger := zap.InitLogger()
 	userID := req.UserId
+
+	// 解析token,获取用户id
+	claims, err := Jwt.ParseToken(req.Token)
+	if err != nil {
+		logger.Errorln(err.Error())
+		res := &relation.RelationFollowerListResponse{
+			StatusCode: -1,
+			StatusMsg:  "token 解析错误",
+		}
+		return res, nil
+	}
+	if userID != claims.Id {
+		logger.Errorf("当前登录用户%d无法访问其他用户的关注列表%d", claims.Id, userID)
+		res := &relation.RelationFollowerListResponse{
+			StatusCode: -1,
+			StatusMsg:  "当前登录用户无法访问其他用户的粉丝列表",
+		}
+		return res, nil
+	}
 
 	// 从数据库获取粉丝列表
 	followers, err := db.GetFollowerListByUserID(ctx, userID)
@@ -219,6 +257,25 @@ func (s *RelationServiceImpl) RelationFollowerList(ctx context.Context, req *rel
 func (s *RelationServiceImpl) RelationFriendList(ctx context.Context, req *relation.RelationFriendListRequest) (resp *relation.RelationFriendListResponse, err error) {
 	logger := zap.InitLogger()
 	userID := req.UserId
+
+	// 解析token,获取用户id
+	claims, err := Jwt.ParseToken(req.Token)
+	if err != nil {
+		logger.Errorln(err.Error())
+		res := &relation.RelationFriendListResponse{
+			StatusCode: -1,
+			StatusMsg:  "token 解析错误",
+		}
+		return res, nil
+	}
+	if userID != claims.Id {
+		logger.Errorf("当前登录用户%d无法访问其他用户的朋友列表%d", claims.Id, userID)
+		res := &relation.RelationFriendListResponse{
+			StatusCode: -1,
+			StatusMsg:  "当前登录用户无法访问其他用户的粉丝列表",
+		}
+		return res, nil
+	}
 
 	// 从数据库获取朋友列表
 	friends, err := db.GetFriendList(ctx, userID)

@@ -1,13 +1,11 @@
 package service
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"time"
 
 	"github.com/bytedance-youthcamp-jbzx/tiktok/dal/db"
-	"github.com/bytedance-youthcamp-jbzx/tiktok/internal/tool"
 	user "github.com/bytedance-youthcamp-jbzx/tiktok/kitex/kitex_gen/user"
 	video "github.com/bytedance-youthcamp-jbzx/tiktok/kitex/kitex_gen/video"
 	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/minio"
@@ -184,70 +182,6 @@ func (s *VideoServiceImpl) PublishAction(ctx context.Context, req *video.Publish
 
 	createTimestamp := time.Now().UnixMilli()
 	videoTitle, coverTitle := fmt.Sprintf("%d_%s_%d.mp4", userID, req.Title, createTimestamp), fmt.Sprintf("%d_%s_%d.png", userID, req.Title, createTimestamp)
-	// 将视频数据上传至minio
-	reader := bytes.NewReader(req.Data)
-	contentType := "application/mp4"
-
-	uploadSize, err := minio.UploadFileByIO(minio.VideoBucketName, videoTitle, reader, int64(size), contentType)
-	if err != nil {
-		logger.Errorf("视频上传至minio失败：%v", err.Error())
-		res := &video.PublishActionResponse{
-			StatusCode: -1,
-			StatusMsg:  "视频上传失败",
-		}
-		return res, nil
-	}
-	logger.Infof("上传文件大小为:%v", uploadSize)
-
-	// 获取上传文件的路径
-	playUrl, err := minio.GetFileTemporaryURL(minio.VideoBucketName, videoTitle)
-	if err != nil {
-		logger.Errorln(err.Error())
-		res := &video.PublishActionResponse{
-			StatusCode: -1,
-			StatusMsg:  "服务器内部错误：视频获取失败",
-		}
-		return res, nil
-	}
-	logger.Infof("上传视频路径：%v", playUrl)
-
-	// 截取第一帧并将图像上传至minio
-	imgBuffer, err := tool.GetSnapshotImageBuffer(playUrl, 1)
-	if err != nil {
-		logger.Errorln(err.Error())
-		res := &video.PublishActionResponse{
-			StatusCode: -1,
-			StatusMsg:  "服务器内部错误：封面获取失败",
-		}
-		return res, nil
-	}
-	var imgByte []byte
-	imgBuffer.Write(imgByte)
-	contentType = "image/png"
-
-	size = imgBuffer.Len()
-	uploadSize, err = minio.UploadFileByIO(minio.CoverBucketName, coverTitle, imgBuffer, int64(size), contentType)
-	if err != nil {
-		logger.Errorf("封面上传至minio失败：%v", err.Error())
-		res := &video.PublishActionResponse{
-			StatusCode: -1,
-			StatusMsg:  "服务器内部错误：封面上传失败",
-		}
-		return res, nil
-	}
-	logger.Infof("上传文件大小为:%v", uploadSize)
-
-	// 获取上传文件的路径
-	coverUrl, err := minio.GetFileTemporaryURL(minio.CoverBucketName, coverTitle)
-	if err != nil {
-		logger.Errorf("封面获取链接失败：%v", err.Error())
-		res := &video.PublishActionResponse{
-			StatusCode: -1,
-			StatusMsg:  "服务器内部错误：封面获取失败",
-		}
-		return res, nil
-	}
-	logger.Infof("上传封面路径：%v", coverUrl)
 
 	// 插入数据库
 	v := &db.Video{
@@ -266,9 +200,15 @@ func (s *VideoServiceImpl) PublishAction(ctx context.Context, req *video.Publish
 		return res, nil
 	}
 
+	//async.Exec(func() interface{} {
+	//	return VideoPublish(req.Data, videoTitle, coverTitle)
+	//})
+	//future.Await()
+	go VideoPublish(req.Data, videoTitle, coverTitle)
+
 	res := &video.PublishActionResponse{
 		StatusCode: 0,
-		StatusMsg:  "success",
+		StatusMsg:  "创建记录成功，等待后台上传完成",
 	}
 	return res, nil
 }

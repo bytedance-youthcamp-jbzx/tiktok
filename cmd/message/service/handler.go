@@ -28,7 +28,7 @@ func (s *MessageServiceImpl) MessageChat(ctx context.Context, req *message.Messa
 	userID := claims.Id
 
 	// 从redis中获取message时间戳
-	lastTimestamp, err := redis.GetMessageTimestamp(ctx, req.Token)
+	lastTimestamp, err := redis.GetMessageTimestamp(ctx, req.Token, req.ToUserId)
 	if err != nil {
 		logger.Errorln(err.Error())
 		res := &message.MessageChatResponse{
@@ -94,7 +94,7 @@ func (s *MessageServiceImpl) MessageChat(ctx context.Context, req *message.Messa
 		lastTimestamp = int(message.CreateTime)
 	}
 
-	if err = redis.SetMessageTimestamp(ctx, req.Token, lastTimestamp); err != nil {
+	if err = redis.SetMessageTimestamp(ctx, req.Token, req.ToUserId, lastTimestamp); err != nil {
 		logger.Errorln(err.Error())
 		res := &message.MessageChatResponse{
 			StatusCode: -1,

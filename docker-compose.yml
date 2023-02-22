@@ -16,16 +16,6 @@ version: '3'
 #    retries: 3
 
 services:
-  #  mysql:
-  #    image: 'mysql:v1.0.0'
-  #    ports:
-  #      - 3308:3306
-  #    environment:
-  #      - MYSQL_DATABASE=db_tiktok
-  #      - MYSQL_USER=root
-  #      - MYSQL_PASSWORD=uestc123456
-  #      - MYSQL_RANDOM_ROOT_PASSWORD="yes"
-  #
   #  Etcd:
   #    image: 'bitnami/etcd:v1.0.0'
   #    environment:

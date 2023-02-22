@@ -60,3 +60,31 @@ func GetVideosByUserID(ctx context.Context, authorId int64) ([]*Video, error) {
 	}
 	return pubList, nil
 }
+
+// DelVideoByID
+//
+//	@Description: 根据视频id和作者id删除视频
+//	@Date 2023-02-22 23:34:45
+//	@param ctx 数据库操作上下文
+//	@param videoID 视频id
+//	@param authorID 作者id
+//	@return error
+func DelVideoByID(ctx context.Context, videoID int64, authorID int64) error {
+	err := GetDB().Clauses(dbresolver.Read).WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		// 1. 根据主键 video_id 删除 video
+		err := tx.Unscoped().Delete(&Video{}, videoID).Error
+		if err != nil {
+			return err
+		}
+		// 2. 同步 user 表中的作品数量
+		res := tx.Model(&User{}).Where("id = ?", authorID).Update("work_count", gorm.Expr("work_count - ?", 1))
+		if res.Error != nil {
+			return err
+		}
+		if res.RowsAffected != 1 {
+			return errno.ErrDatabase
+		}
+		return nil
+	})
+	return err
+}

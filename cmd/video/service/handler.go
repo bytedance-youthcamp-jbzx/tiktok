@@ -200,11 +200,20 @@ func (s *VideoServiceImpl) PublishAction(ctx context.Context, req *video.Publish
 		return res, nil
 	}
 
+	go func() {
+		err := VideoPublish(req.Data, videoTitle, coverTitle)
+		if err != nil {
+			// 发生错误，则删除插入的记录
+			e := db.DelVideoByID(ctx, int64(v.ID), userID)
+			if e != nil {
+				logger.Errorf("视频记录删除失败：%s", err.Error())
+			}
+		}
+	}()
 	//async.Exec(func() interface{} {
-	//	return VideoPublish(req.Data, videoTitle, coverTitle)
+	//	return VideoPublish(ctx, req.Data, videoTitle, coverTitle, int64(v.ID), userID)
 	//})
 	//future.Await()
-	go VideoPublish(req.Data, videoTitle, coverTitle)
 
 	res := &video.PublishActionResponse{
 		StatusCode: 0,

@@ -32,7 +32,7 @@ func Feed(c *gin.Context) {
 	}
 	res, _ := rpc.Feed(ctx, req)
 	if res.StatusCode == -1 {
-		c.JSON(http.StatusOK, response.FavoriteList{
+		c.JSON(http.StatusOK, response.Feed{
 			Base: response.Base{
 				StatusCode: -1,
 				StatusMsg:  res.StatusMsg,

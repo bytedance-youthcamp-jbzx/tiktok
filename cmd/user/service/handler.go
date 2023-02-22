@@ -3,12 +3,12 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/bytedance-youthcamp-jbzx/dousheng/dal/db"
-	"github.com/bytedance-youthcamp-jbzx/dousheng/internal/tool"
-	user "github.com/bytedance-youthcamp-jbzx/dousheng/kitex/kitex_gen/user"
-	"github.com/bytedance-youthcamp-jbzx/dousheng/pkg/jwt"
-	"github.com/bytedance-youthcamp-jbzx/dousheng/pkg/minio"
-	"github.com/bytedance-youthcamp-jbzx/dousheng/pkg/zap"
+	"github.com/bytedance-youthcamp-jbzx/tiktok/dal/db"
+	"github.com/bytedance-youthcamp-jbzx/tiktok/internal/tool"
+	user "github.com/bytedance-youthcamp-jbzx/tiktok/kitex/kitex_gen/user"
+	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/jwt"
+	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/minio"
+	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/zap"
 	"math/rand"
 	"time"
 )

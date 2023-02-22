@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/bytedance-youthcamp-jbzx/dousheng/dal/redis"
-	"github.com/bytedance-youthcamp-jbzx/dousheng/pkg/gocron"
+	"github.com/bytedance-youthcamp-jbzx/tiktok/dal/redis"
+	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/gocron"
 )
 
 const frequency = 10

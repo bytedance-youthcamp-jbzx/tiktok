@@ -2,11 +2,11 @@ package service
 
 import (
 	"context"
-	"github.com/bytedance-youthcamp-jbzx/dousheng/dal/db"
-	"github.com/bytedance-youthcamp-jbzx/dousheng/dal/redis"
-	"github.com/bytedance-youthcamp-jbzx/dousheng/internal/tool"
-	message "github.com/bytedance-youthcamp-jbzx/dousheng/kitex/kitex_gen/message"
-	"github.com/bytedance-youthcamp-jbzx/dousheng/pkg/zap"
+	"github.com/bytedance-youthcamp-jbzx/tiktok/dal/db"
+	"github.com/bytedance-youthcamp-jbzx/tiktok/dal/redis"
+	"github.com/bytedance-youthcamp-jbzx/tiktok/internal/tool"
+	message "github.com/bytedance-youthcamp-jbzx/tiktok/kitex/kitex_gen/message"
+	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/zap"
 )
 
 // MessageServiceImpl implements the last service interface defined in the IDL.

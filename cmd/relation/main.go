@@ -7,12 +7,12 @@ import (
 	"github.com/cloudwego/kitex/pkg/limit"
 	"github.com/cloudwego/kitex/pkg/rpcinfo"
 
-	"github.com/bytedance-youthcamp-jbzx/dousheng/cmd/relation/service"
-	"github.com/bytedance-youthcamp-jbzx/dousheng/kitex/kitex_gen/relation/relationservice"
-	"github.com/bytedance-youthcamp-jbzx/dousheng/pkg/etcd"
-	"github.com/bytedance-youthcamp-jbzx/dousheng/pkg/middleware"
-	"github.com/bytedance-youthcamp-jbzx/dousheng/pkg/viper"
-	"github.com/bytedance-youthcamp-jbzx/dousheng/pkg/zap"
+	"github.com/bytedance-youthcamp-jbzx/tiktok/cmd/relation/service"
+	"github.com/bytedance-youthcamp-jbzx/tiktok/kitex/kitex_gen/relation/relationservice"
+	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/etcd"
+	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/middleware"
+	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/viper"
+	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/zap"
 	"github.com/cloudwego/kitex/server"
 )
 

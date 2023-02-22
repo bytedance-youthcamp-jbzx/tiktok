@@ -6,13 +6,13 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/bytedance-youthcamp-jbzx/dousheng/dal/db"
-	"github.com/bytedance-youthcamp-jbzx/dousheng/internal/tool"
-	user "github.com/bytedance-youthcamp-jbzx/dousheng/kitex/kitex_gen/user"
-	video "github.com/bytedance-youthcamp-jbzx/dousheng/kitex/kitex_gen/video"
-	"github.com/bytedance-youthcamp-jbzx/dousheng/pkg/minio"
-	"github.com/bytedance-youthcamp-jbzx/dousheng/pkg/viper"
-	"github.com/bytedance-youthcamp-jbzx/dousheng/pkg/zap"
+	"github.com/bytedance-youthcamp-jbzx/tiktok/dal/db"
+	"github.com/bytedance-youthcamp-jbzx/tiktok/internal/tool"
+	user "github.com/bytedance-youthcamp-jbzx/tiktok/kitex/kitex_gen/user"
+	video "github.com/bytedance-youthcamp-jbzx/tiktok/kitex/kitex_gen/video"
+	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/minio"
+	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/viper"
+	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/zap"
 )
 
 // VideoServiceImpl implements the last service interface defined in the IDL.

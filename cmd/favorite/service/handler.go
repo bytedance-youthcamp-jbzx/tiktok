@@ -3,12 +3,12 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"github.com/bytedance-youthcamp-jbzx/dousheng/dal/db"
-	"github.com/bytedance-youthcamp-jbzx/dousheng/dal/redis"
-	favorite "github.com/bytedance-youthcamp-jbzx/dousheng/kitex/kitex_gen/favorite"
-	user "github.com/bytedance-youthcamp-jbzx/dousheng/kitex/kitex_gen/user"
-	video "github.com/bytedance-youthcamp-jbzx/dousheng/kitex/kitex_gen/video"
-	"github.com/bytedance-youthcamp-jbzx/dousheng/pkg/minio"
+	"github.com/bytedance-youthcamp-jbzx/tiktok/dal/db"
+	"github.com/bytedance-youthcamp-jbzx/tiktok/dal/redis"
+	favorite "github.com/bytedance-youthcamp-jbzx/tiktok/kitex/kitex_gen/favorite"
+	user "github.com/bytedance-youthcamp-jbzx/tiktok/kitex/kitex_gen/user"
+	video "github.com/bytedance-youthcamp-jbzx/tiktok/kitex/kitex_gen/video"
+	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/minio"
 )
 
 // FavoriteServiceImpl implements the last service interface defined in the IDL.

@@ -1,11 +1,13 @@
 package main
 
 import (
+	"crypto/tls"
 	"fmt"
 	"github.com/bytedance-youthcamp-jbzx/tiktok/cmd/api/handler"
 	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/jwt"
 	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/middleware"
 	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/viper"
+	z "github.com/bytedance-youthcamp-jbzx/tiktok/pkg/zap"
 	"github.com/cloudwego/hertz/pkg/app/server"
 	"github.com/cloudwego/hertz/pkg/common/config"
 	"github.com/cloudwego/hertz/pkg/network/standard"
@@ -66,7 +68,7 @@ func registerGroup(hz *server.Hertz) {
 }
 
 func InitHertz() *server.Hertz {
-	// logger := z.InitLogger()
+	logger := z.InitLogger()
 
 	opts := []config.Option{server.WithHostPorts(apiServerAddr)}
 
@@ -93,36 +95,36 @@ func InitHertz() *server.Hertz {
 
 	// TLS & Http2
 	// https://github.com/cloudwego/hertz-examples/blob/main/protocol/tls/main.go
-	// tlsConfig := tls.Config{
-	// 	MinVersion:       tls.VersionTLS12,
-	// 	CurvePreferences: []tls.CurveID{tls.X25519, tls.CurveP256},
-	// 	CipherSuites: []uint16{
-	// 		tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,
-	// 		tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
-	// 		tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
-	// 	},
-	// }
-	// if apiConfig.Viper.GetBool("Hertz.tls.enable") {
-	// 	if len(serverTLSKey) == 0 {
-	// 		panic("not found tiktok_tls_key in configuration")
-	// 	}
-	// 	if len(serverTLSCert) == 0 {
-	// 		panic("not found tiktok_tls_cert in configuration")
-	// 	}
+	tlsConfig := tls.Config{
+		MinVersion:       tls.VersionTLS12,
+		CurvePreferences: []tls.CurveID{tls.X25519, tls.CurveP256},
+		CipherSuites: []uint16{
+			tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,
+			tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+			tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+		},
+	}
+	if apiConfig.Viper.GetBool("Hertz.tls.enable") {
+		if len(serverTLSKey) == 0 {
+			panic("not found tiktok_tls_key in configuration")
+		}
+		if len(serverTLSCert) == 0 {
+			panic("not found tiktok_tls_cert in configuration")
+		}
 
-	// 	cert, err := tls.LoadX509KeyPair(serverTLSCert, serverTLSKey)
-	// 	if err != nil {
-	// 		logger.Errorln(err)
-	// 	}
-	// 	tlsConfig.Certificates = append(tlsConfig.Certificates, cert)
-	// 	opts = append(opts, server.WithTLS(&tlsConfig))
+		cert, err := tls.LoadX509KeyPair(serverTLSCert, serverTLSKey)
+		if err != nil {
+			logger.Errorln(err)
+		}
+		tlsConfig.Certificates = append(tlsConfig.Certificates, cert)
+		opts = append(opts, server.WithTLS(&tlsConfig))
 
-	// 	if alpn := apiConfig.Viper.GetBool("Hertz.tls.ALPN"); alpn {
-	// 		opts = append(opts, server.WithALPN(alpn))
-	// 	}
-	// } else if apiConfig.Viper.GetBool("Hertz.http2.enable") {
-	// 	opts = append(opts, server.WithH2C(apiConfig.Viper.GetBool("Hertz.http2.enable")))
-	// }
+		if alpn := apiConfig.Viper.GetBool("Hertz.tls.ALPN"); alpn {
+			opts = append(opts, server.WithALPN(alpn))
+		}
+	} else if apiConfig.Viper.GetBool("Hertz.http2.enable") {
+		opts = append(opts, server.WithH2C(apiConfig.Viper.GetBool("Hertz.http2.enable")))
+	}
 
 	hz := server.Default(opts...)
 

@@ -72,20 +72,6 @@ func InitHertz() *server.Hertz {
 
 	opts := []config.Option{server.WithHostPorts(apiServerAddr)}
 
-	// 服务注册
-	//if apiConfig.Viper.GetBool("Etcd.enable") {
-	//	r, err := etcd.NewEtcdRegistry([]string{etcdAddress})
-	//	if err != nil {
-	//		logger.Fatalln(err.Error())
-	//	}
-	//	opts = append(opts, server.WithRegistry(r, &registry.Info{
-	//		ServiceName: apiServerName,
-	//		Addr:        utils.NewNetAddr("tcp", apiServerAddr),
-	//		Weight:      10,
-	//		Tags:        nil,
-	//	}))
-	//}
-
 	// 网络库
 	hertzNet := standard.NewTransporter
 	//if apiConfig.Viper.GetBool("Hertz.useNetPoll") {

@@ -4,7 +4,6 @@ package rpc
 import (
 	"context"
 	"fmt"
-	"github.com/kitex-contrib/obs-opentelemetry/tracing"
 	"time"
 
 	relation "github.com/bytedance-youthcamp-jbzx/tiktok/kitex/kitex_gen/relation"
@@ -28,12 +27,7 @@ func InitRelation(config *viper.Config) {
 	if err != nil {
 		panic(err)
 	}
-	//p := provider.NewOpenTelemetryProvider(
-	//	provider.WithServiceName(serviceName),
-	//	provider.WithExportEndpoint("localhost:4317"),
-	//	provider.WithInsecure(),
-	//)
-	//defer p.Shutdown(context.Background())
+
 	c, err := relationservice.NewClient(
 		serviceName,
 		client.WithMiddleware(middleware.CommonMiddleware),
@@ -42,8 +36,8 @@ func InitRelation(config *viper.Config) {
 		client.WithRPCTimeout(30*time.Second),             // rpc timeout
 		client.WithConnectTimeout(30000*time.Millisecond), // conn timeout
 		client.WithFailureRetry(retry.NewFailurePolicy()), // retry
-		client.WithSuite(tracing.NewClientSuite()),        // tracer
-		client.WithResolver(r),                            // resolver
+		//client.WithSuite(tracing.NewClientSuite()),        // tracer
+		client.WithResolver(r), // resolver
 		// Please keep the same as provider.WithServiceName
 		client.WithClientBasicInfo(&rpcinfo.EndpointBasicInfo{ServiceName: serviceName}),
 	)

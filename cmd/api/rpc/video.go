@@ -13,8 +13,6 @@ import (
 	"github.com/cloudwego/kitex/client"
 	"github.com/cloudwego/kitex/pkg/retry"
 	"github.com/cloudwego/kitex/pkg/rpcinfo"
-	"github.com/kitex-contrib/obs-opentelemetry/provider"
-	"github.com/kitex-contrib/obs-opentelemetry/tracing"
 )
 
 var (
@@ -28,12 +26,6 @@ func InitVideo(config *viper.Config) {
 	if err != nil {
 		panic(err)
 	}
-	p := provider.NewOpenTelemetryProvider(
-		provider.WithServiceName(serviceName),
-		provider.WithExportEndpoint("localhost:4317"),
-		provider.WithInsecure(),
-	)
-	defer p.Shutdown(context.Background())
 
 	c, err := videoservice.NewClient(
 		serviceName,
@@ -43,8 +35,8 @@ func InitVideo(config *viper.Config) {
 		client.WithRPCTimeout(300*time.Second),             // rpc timeout
 		client.WithConnectTimeout(300000*time.Millisecond), // conn timeout
 		client.WithFailureRetry(retry.NewFailurePolicy()),  // retry
-		client.WithSuite(tracing.NewClientSuite()),         // tracer
-		client.WithResolver(r),                             // resolver
+		//client.WithSuite(tracing.NewClientSuite()),         // tracer
+		client.WithResolver(r), // resolver
 		// Please keep the same as provider.WithServiceName
 		client.WithClientBasicInfo(&rpcinfo.EndpointBasicInfo{ServiceName: serviceName}),
 	)

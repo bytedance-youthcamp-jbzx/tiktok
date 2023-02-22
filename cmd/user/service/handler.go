@@ -54,30 +54,6 @@ func (s *UserServiceImpl) Register(ctx context.Context, req *user.UserRegisterRe
 		return res, nil
 	}
 
-	//if err := db.CreateUsers(ctx, []*db.User{{
-	//	UserName: req.Username,
-	//	Password: tool.Md5Encrypt(req.Password),
-	//	Avatar:   fmt.Sprintf("default%d.png", rand.Intn(10)),
-	//}}); err != nil {
-	//	logger.Errorf("发生错误：%v", err.Error())
-	//	res := &user.UserRegisterResponse{
-	//		StatusCode: -1,
-	//		StatusMsg:  "注册失败：服务器内部错误",
-	//	}
-	//	return res, nil
-	//}
-
-	// 获取用户id
-	//usr, err = db.GetUserByName(ctx, req.Username)
-	//if err != nil || usr == nil {
-	//	logger.Errorf("发生错误：%v", err.Error())
-	//	res := &user.UserRegisterResponse{
-	//		StatusCode: -1,
-	//		StatusMsg:  "注册失败：服务器内部错误",
-	//	}
-	//	return res, nil
-	//}
-
 	//生成token
 	claims := jwt.CustomClaims{Id: int64(usr.ID)}
 	claims.ExpiresAt = time.Now().Add(time.Minute * 5).Unix()

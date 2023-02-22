@@ -51,6 +51,7 @@ func CommentAction(c *gin.Context) {
 				},
 				Comment: nil,
 			})
+			return
 		}
 		req.CommentText = commentText
 	} else if actionType == 2 {

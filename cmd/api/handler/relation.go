@@ -2,16 +2,16 @@ package handler
 
 import (
 	"context"
+	"github.com/cloudwego/hertz/pkg/app"
 	"net/http"
 	"strconv"
 
 	"github.com/bytedance-youthcamp-jbzx/tiktok/cmd/api/rpc"
 	"github.com/bytedance-youthcamp-jbzx/tiktok/internal/response"
 	kitex "github.com/bytedance-youthcamp-jbzx/tiktok/kitex/kitex_gen/relation"
-	"github.com/gin-gonic/gin"
 )
 
-func FriendList(c *gin.Context) {
+func FriendList(ctx context.Context, c *app.RequestContext) {
 	token := c.Query("token")
 	uid, err := strconv.ParseInt(c.Query("user_id"), 10, 64)
 	if err != nil {
@@ -24,7 +24,6 @@ func FriendList(c *gin.Context) {
 		return
 	}
 	// 调用kitex/kitex_gen
-	ctx := context.Background()
 	req := &kitex.RelationFriendListRequest{
 		UserId: uid,
 		Token:  token,
@@ -48,7 +47,7 @@ func FriendList(c *gin.Context) {
 	})
 }
 
-func FollowerList(c *gin.Context) {
+func FollowerList(ctx context.Context, c *app.RequestContext) {
 	uid, err := strconv.ParseInt(c.Query("user_id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusOK, response.FollowerList{
@@ -60,7 +59,6 @@ func FollowerList(c *gin.Context) {
 		return
 	}
 
-	ctx := context.Background()
 	token := c.Query("token")
 	req := &kitex.RelationFollowerListRequest{
 		UserId: uid,
@@ -85,7 +83,7 @@ func FollowerList(c *gin.Context) {
 	})
 }
 
-func FollowList(c *gin.Context) {
+func FollowList(ctx context.Context, c *app.RequestContext) {
 	uid, err := strconv.ParseInt(c.Query("user_id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusOK, response.FollowList{
@@ -96,7 +94,6 @@ func FollowList(c *gin.Context) {
 		})
 		return
 	}
-	ctx := context.Background()
 	token := c.Query("token")
 	req := &kitex.RelationFollowListRequest{
 		UserId: uid,
@@ -121,7 +118,7 @@ func FollowList(c *gin.Context) {
 	})
 }
 
-func RelationAction(c *gin.Context) {
+func RelationAction(ctx context.Context, c *app.RequestContext) {
 	tid, err := strconv.ParseInt(c.Query("to_user_id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusOK, response.RelationAction{
@@ -142,7 +139,6 @@ func RelationAction(c *gin.Context) {
 		})
 		return
 	}
-	ctx := context.Background()
 	token := c.Query("token")
 	if token == "" {
 		c.JSON(http.StatusOK, response.RelationAction{

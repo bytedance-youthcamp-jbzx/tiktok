@@ -6,53 +6,24 @@ import (
 	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/jwt"
 	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/middleware"
 	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/viper"
-	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/zap"
-	"github.com/gin-gonic/gin"
+	"github.com/cloudwego/hertz/pkg/app/server"
+	"github.com/cloudwego/hertz/pkg/common/config"
+	"github.com/cloudwego/hertz/pkg/network/standard"
+	"github.com/hertz-contrib/gzip"
 )
 
 var (
-	config        = viper.Init("api")
-	apiServerAddr = fmt.Sprintf("%s:%d", config.Viper.GetString("server.host"), config.Viper.GetInt("server.port"))
-	signingKey    = config.Viper.GetString("JWT.signingKey")
-	enableTLS     = config.Viper.GetBool("tls.enable")
-	serverTLSKey  string
-	serverTLSCert string
+	apiConfig     = viper.Init("api")
+	apiServerName = apiConfig.Viper.GetString("server.name")
+	apiServerAddr = fmt.Sprintf("%s:%d", apiConfig.Viper.GetString("server.host"), apiConfig.Viper.GetInt("server.port"))
+	etcdAddress   = fmt.Sprintf("%s:%d", apiConfig.Viper.GetString("Etcd.host"), apiConfig.Viper.GetInt("Etcd.port"))
+	signingKey    = apiConfig.Viper.GetString("JWT.signingKey")
+	serverTLSKey  = apiConfig.Viper.GetString("Hertz.tls.keyFile")
+	serverTLSCert = apiConfig.Viper.GetString("Hertz.tls.certFile")
 )
 
-func initGin() *gin.Engine {
-	opts := []gin.HandlerFunc{
-		middleware.TokenAuthMiddleware(*jwt.NewJWT([]byte(signingKey)),
-			"/douyin/user/register/",
-			"/douyin/user/login/",
-			"/douyin/feed",
-			"/douyin/favorite/list/",
-			"/douyin/publish/list/",
-			"/douyin/comment/list/",
-			"/douyin/relation/follower/list/",
-			"/douyin/relation/follow/list/",
-		), // 用户鉴权中间件
-		middleware.TokenLimitMiddleware(), //限流中间件
-	}
-
-	if enableTLS {
-		serverTLSKey = config.Viper.GetString("tls.tiktok_tls_key")
-		serverTLSCert = config.Viper.GetString("tls.tiktok_tls_cert")
-		if len(serverTLSKey) == 0 {
-			panic("not found tiktok_tls_key in configuration")
-		}
-		if len(serverTLSCert) == 0 {
-			panic("not found tiktok_tls_cert in configuration")
-		}
-		opts = append(opts, middleware.TLSSupportMiddleware(apiServerAddr)) // TLS协议中间件
-	}
-
-	r := gin.Default()
-	r.Use(opts...)
-	return r
-}
-
-func registerGroup(r *gin.Engine) {
-	douyin := r.Group("/douyin")
+func registerGroup(hz *server.Hertz) {
+	douyin := hz.Group("/douyin")
 	{
 		user := douyin.Group("/user")
 		{
@@ -94,21 +65,94 @@ func registerGroup(r *gin.Engine) {
 	}
 }
 
+func InitHertz() *server.Hertz {
+	// logger := z.InitLogger()
+
+	opts := []config.Option{server.WithHostPorts(apiServerAddr)}
+
+	// 服务注册
+	//if apiConfig.Viper.GetBool("Etcd.enable") {
+	//	r, err := etcd.NewEtcdRegistry([]string{etcdAddress})
+	//	if err != nil {
+	//		logger.Fatalln(err.Error())
+	//	}
+	//	opts = append(opts, server.WithRegistry(r, &registry.Info{
+	//		ServiceName: apiServerName,
+	//		Addr:        utils.NewNetAddr("tcp", apiServerAddr),
+	//		Weight:      10,
+	//		Tags:        nil,
+	//	}))
+	//}
+
+	// 网络库
+	hertzNet := standard.NewTransporter
+	//if apiConfig.Viper.GetBool("Hertz.useNetPoll") {
+	//	hertzNet = netpoll.NewTransporter
+	//}
+	opts = append(opts, server.WithTransport(hertzNet))
+
+	// TLS & Http2
+	// https://github.com/cloudwego/hertz-examples/blob/main/protocol/tls/main.go
+	// tlsConfig := tls.Config{
+	// 	MinVersion:       tls.VersionTLS12,
+	// 	CurvePreferences: []tls.CurveID{tls.X25519, tls.CurveP256},
+	// 	CipherSuites: []uint16{
+	// 		tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,
+	// 		tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+	// 		tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+	// 	},
+	// }
+	// if apiConfig.Viper.GetBool("Hertz.tls.enable") {
+	// 	if len(serverTLSKey) == 0 {
+	// 		panic("not found tiktok_tls_key in configuration")
+	// 	}
+	// 	if len(serverTLSCert) == 0 {
+	// 		panic("not found tiktok_tls_cert in configuration")
+	// 	}
+
+	// 	cert, err := tls.LoadX509KeyPair(serverTLSCert, serverTLSKey)
+	// 	if err != nil {
+	// 		logger.Errorln(err)
+	// 	}
+	// 	tlsConfig.Certificates = append(tlsConfig.Certificates, cert)
+	// 	opts = append(opts, server.WithTLS(&tlsConfig))
+
+	// 	if alpn := apiConfig.Viper.GetBool("Hertz.tls.ALPN"); alpn {
+	// 		opts = append(opts, server.WithALPN(alpn))
+	// 	}
+	// } else if apiConfig.Viper.GetBool("Hertz.http2.enable") {
+	// 	opts = append(opts, server.WithH2C(apiConfig.Viper.GetBool("Hertz.http2.enable")))
+	// }
+
+	hz := server.Default(opts...)
+
+	hz.Use(
+		// secure.New(
+		// 	secure.WithSSLHost(apiServerAddr),
+		// 	secure.WithSSLRedirect(true),
+		// ),	// TLS
+		middleware.TokenAuthMiddleware(*jwt.NewJWT([]byte(signingKey)),
+			"/douyin/user/register/",
+			"/douyin/user/login/",
+			"/douyin/feed",
+			"/douyin/favorite/list/",
+			"/douyin/publish/list/",
+			"/douyin/comment/list/",
+			"/douyin/relation/follower/list/",
+			"/douyin/relation/follow/list/",
+		), // 用户鉴权中间件
+		middleware.TokenLimitMiddleware(), //限流中间件
+		middleware.AccessLog(),
+		gzip.Gzip(gzip.DefaultCompression),
+	)
+	return hz
+}
+
 func main() {
-	logger := zap.InitLogger()
+	hz := InitHertz()
 
-	// initial gin
-	r := initGin()
 	// add handler
-	registerGroup(r)
+	registerGroup(hz)
 
-	if enableTLS {
-		if err := r.RunTLS(apiServerAddr, serverTLSCert, serverTLSKey); err != nil {
-			logger.Fatalln(err.Error())
-		}
-	} else {
-		if err := r.Run(apiServerAddr); err != nil {
-			logger.Fatalln(err.Error())
-		}
-	}
+	hz.Spin()
 }

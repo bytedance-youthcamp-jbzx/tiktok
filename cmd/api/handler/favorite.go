@@ -2,16 +2,16 @@ package handler
 
 import (
 	"context"
+	"github.com/cloudwego/hertz/pkg/app"
 	"net/http"
 	"strconv"
 
 	"github.com/bytedance-youthcamp-jbzx/tiktok/cmd/api/rpc"
 	"github.com/bytedance-youthcamp-jbzx/tiktok/internal/response"
 	kitex "github.com/bytedance-youthcamp-jbzx/tiktok/kitex/kitex_gen/favorite"
-	"github.com/gin-gonic/gin"
 )
 
-func FavoriteAction(c *gin.Context) {
+func FavoriteAction(ctx context.Context, c *app.RequestContext) {
 	token := c.Query("token")
 	actionType, err := strconv.ParseInt(c.Query("action_type"), 10, 64)
 	if err != nil || (actionType != 1 && actionType != 2) {
@@ -33,7 +33,6 @@ func FavoriteAction(c *gin.Context) {
 		})
 		return
 	}
-	ctx := context.Background()
 	req := &kitex.FavoriteActionRequest{
 		Token:      token,
 		VideoId:    vid,
@@ -57,7 +56,7 @@ func FavoriteAction(c *gin.Context) {
 	})
 }
 
-func FavoriteList(c *gin.Context) {
+func FavoriteList(ctx context.Context, c *app.RequestContext) {
 	token := c.Query("token")
 
 	uid, err := strconv.ParseInt(c.Query("user_id"), 10, 64)
@@ -71,7 +70,6 @@ func FavoriteList(c *gin.Context) {
 		return
 	}
 
-	ctx := context.Background()
 	req := &kitex.FavoriteListRequest{
 		UserId: uid,
 		Token:  token,

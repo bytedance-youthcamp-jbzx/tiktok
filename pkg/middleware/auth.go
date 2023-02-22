@@ -1,31 +1,31 @@
 package middleware
 
 import (
+	"context"
 	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/jwt"
 	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/zap"
+	"github.com/cloudwego/hertz/pkg/app"
 	"net/http"
 	"strings"
-
-	"github.com/gin-gonic/gin"
 )
 
-func TokenAuthMiddleware(jwt jwt.JWT, skipRoutes ...string) gin.HandlerFunc {
+func TokenAuthMiddleware(jwt jwt.JWT, skipRoutes ...string) app.HandlerFunc {
 	logger := zap.InitLogger()
 	// TODO: signKey可以保存在环境变量中，而不是硬编码在代码里，可以通过获取环境变量的方式获得signkey
-	return func(c *gin.Context) {
+	return func(ctx context.Context, c *app.RequestContext) {
 		// 对于skip的路由不对他进行token鉴权
 		for _, skipRoute := range skipRoutes {
 			if skipRoute == c.FullPath() {
-				c.Next()
+				c.Next(ctx)
 				return
 			}
 		}
 
 		// 从处理get post请求中获取token
 		var token string
-		if c.Request.Method == "GET" {
+		if string(c.Request.Method()[:]) == "GET" {
 			token = c.Query("token")
-		} else if c.Request.Method == "POST" {
+		} else if string(c.Request.Method()[:]) == "POST" {
 			if strings.Contains(c.Request.Header.Get("Content-Type"), "multipart/form-data") {
 				token = c.PostForm("token")
 			} else {
@@ -33,12 +33,12 @@ func TokenAuthMiddleware(jwt jwt.JWT, skipRoutes ...string) gin.HandlerFunc {
 			}
 		} else {
 			// Unsupport request method
-			responseWithError(c, http.StatusBadRequest, "bad request")
+			responseWithError(ctx, c, http.StatusBadRequest, "bad request")
 			logger.Errorln("bad request")
 			return
 		}
 		if token == "" {
-			responseWithError(c, http.StatusUnauthorized, "token required")
+			responseWithError(ctx, c, http.StatusUnauthorized, "token required")
 			logger.Errorln("token required")
 			// 提前返回
 			return
@@ -47,7 +47,7 @@ func TokenAuthMiddleware(jwt jwt.JWT, skipRoutes ...string) gin.HandlerFunc {
 		claim, err := jwt.ParseToken(token)
 
 		if err != nil {
-			responseWithError(c, http.StatusUnauthorized, err.Error())
+			responseWithError(ctx, c, http.StatusUnauthorized, err.Error())
 			logger.Errorln(err.Error())
 			return
 		}
@@ -56,6 +56,6 @@ func TokenAuthMiddleware(jwt jwt.JWT, skipRoutes ...string) gin.HandlerFunc {
 		c.Set("Token", token)
 		c.Set("Id", claim.Id)
 
-		c.Next() // 交给下游中间件
+		c.Next(ctx) // 交给下游中间件
 	}
 }

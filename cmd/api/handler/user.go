@@ -3,6 +3,7 @@ package handler
 
 import (
 	"context"
+	"github.com/cloudwego/hertz/pkg/app"
 	"net/http"
 	"strconv"
 
@@ -10,11 +11,10 @@ import (
 	"github.com/bytedance-youthcamp-jbzx/tiktok/internal/response"
 	"github.com/bytedance-youthcamp-jbzx/tiktok/kitex/kitex_gen/user"
 	kitex "github.com/bytedance-youthcamp-jbzx/tiktok/kitex/kitex_gen/user"
-	"github.com/gin-gonic/gin"
 )
 
 // Register 注册
-func Register(c *gin.Context) {
+func Register(ctx context.Context, c *app.RequestContext) {
 	username := c.Query("username")
 	password := c.Query("password")
 	//校验参数
@@ -37,7 +37,6 @@ func Register(c *gin.Context) {
 		return
 	}
 	//调用kitex/kitex_gen
-	ctx := context.Background()
 	req := &kitex.UserRegisterRequest{
 		Username: username,
 		Password: password,
@@ -63,7 +62,7 @@ func Register(c *gin.Context) {
 }
 
 // Login 登录
-func Login(c *gin.Context) {
+func Login(ctx context.Context, c *app.RequestContext) {
 	username := c.Query("username")
 	password := c.Query("password")
 	//校验参数
@@ -77,7 +76,6 @@ func Login(c *gin.Context) {
 		return
 	}
 	//调用kitex/kitex_gen
-	ctx := context.Background()
 	req := &user.UserLoginRequest{
 		Username: username,
 		Password: password,
@@ -103,7 +101,7 @@ func Login(c *gin.Context) {
 }
 
 // UserInfo 用户信息
-func UserInfo(c *gin.Context) {
+func UserInfo(ctx context.Context, c *app.RequestContext) {
 	userId := c.Query("user_id")
 	token := c.Query("token")
 	id, _ := strconv.ParseInt(userId, 10, 64)
@@ -113,7 +111,6 @@ func UserInfo(c *gin.Context) {
 		UserId: id,
 		Token:  token,
 	}
-	ctx := context.Background()
 	res, _ := rpc.UserInfo(ctx, req)
 	if res.StatusCode == -1 {
 		c.JSON(http.StatusOK, response.UserInfo{

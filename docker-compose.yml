@@ -1,66 +1,29 @@
 version: '3'
 
-#x-minio-common: &minio-common
-#  image: quay.io/minio/minio:v1.0.0
-#  command: server --console-address ":9001" http://minio{1...4}/data{1...2}
-#  expose:
-#    - "9000"
-#    - "9001" # TODO 不暴露9001端口号
-#  environment:
-#    MINIO_ROOT_USER: tiktokMinio
-#    MINIO_ROOT_PASSWORD: tiktokMinio
-#  healthcheck:
-#    test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-#    interval: 30s
-#    timeout: 20s
-#    retries: 3
+x-minio-common: &minio-common
+  image: quay.io/minio/minio:v1.0.0
+  command: server --console-address ":9001" http://minio{1...4}/data{1...2}
+  expose:
+    - "9000"
+  environment:
+    MINIO_ROOT_USER: tiktokMinio
+    MINIO_ROOT_PASSWORD: tiktokMinio
+  healthcheck:
+    test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+    interval: 30s
+    timeout: 20s
+    retries: 3
 
 services:
-  #  mysql:
-  #    image: 'mysql:v1.0.0'
-  #    ports:
-  #      - 3308:3306
-  #    environment:
-  #      - MYSQL_DATABASE=db_tiktok
-  #      - MYSQL_USER=root
-  #      - MYSQL_PASSWORD=uestc123456
-  #      - MYSQL_RANDOM_ROOT_PASSWORD="yes"
-  #
-  #  Etcd:
-  #    image: 'bitnami/etcd:v1.0.0'
-  #    environment:
-  #      - ALLOW_NONE_AUTHENTICATION=yes
-  #    ports:
-  #      - 2379:2380
+  Etcd:
+    image: 'bitnami/etcd:v1.0.0'
+    environment:
+      - ALLOW_NONE_AUTHENTICATION=yes
+    ports:
+      - 2379:2380
 
-  # Open telemetry
-  # otel-collector:
-  #   image: otel/opentelemetry-collector-contrib-dev:v1.0.0
-  #   command: [ "--config=/etc/otel-collector-config.yml", "${OTELCOL_ARGS}" ]
-  #   volumes:
-  #     - ./config/otel-collector-config.yml:/etc/otel-collector-config.yml
-  #   ports:
-  #     - "1888:1888"   # pprof extension
-  #     - "8888:8888"   # Prometheus metrics exposed by the collector
-  #     - "8889:8889"   # Prometheus exporter metrics
-  #     - "13133:13133" # health_check extension
-  #     - "4317:4317"   # OTLP gRPC receiver
-  #     - "55670:55679" # zpages extension
-  #   depends_on:
-  #     - jaeger-all-in-one
-
-  # # Jaeger
-  # jaeger-all-in-one:
-  #   image: jaegertracing/all-in-one:v1.0.0
-  #   ports:
-  #     - "16686:16686"
-  #     - "14268"
-  #     - "14250:14250"
-  #     - "6831:6831"
-
-  # dousheng-api
   dousheng-api:
-    image: '1.12.68.184:5000/dousheng-api:v1.0.0'
+    image: '1.12.68.184:5000/dousheng-api-hertz:v1.0.0'
     volumes:
       - type: bind
         source: ./config

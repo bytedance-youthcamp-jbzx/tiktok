@@ -20,8 +20,11 @@ require (
 )
 
 require (
+	github.com/cloudwego/hertz v0.5.2
 	github.com/go-co-op/gocron v1.18.0
 	github.com/go-redsync/redsync/v4 v4.8.1
+	github.com/hertz-contrib/gzip v0.0.1
+    github.com/hertz-contrib/secure v0.0.0-20221010065415-c2ee6f6bd0ca
 	github.com/rabbitmq/amqp091-go v1.7.0
 	github.com/redis/go-redis/v9 v9.0.2
 	go.etcd.io/etcd/client/v3 v3.5.6

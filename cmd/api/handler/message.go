@@ -2,16 +2,16 @@ package handler
 
 import (
 	"context"
+	"github.com/cloudwego/hertz/pkg/app"
 	"net/http"
 	"strconv"
 
 	"github.com/bytedance-youthcamp-jbzx/tiktok/cmd/api/rpc"
 	"github.com/bytedance-youthcamp-jbzx/tiktok/internal/response"
 	kitex "github.com/bytedance-youthcamp-jbzx/tiktok/kitex/kitex_gen/message"
-	"github.com/gin-gonic/gin"
 )
 
-func MessageChat(c *gin.Context) {
+func MessageChat(ctx context.Context, c *app.RequestContext) {
 	token := c.Query("token")
 	toUserID, err := strconv.ParseInt(c.Query("to_user_id"), 10, 64)
 	if err != nil {
@@ -26,7 +26,6 @@ func MessageChat(c *gin.Context) {
 	}
 
 	// 调用kitex/kitex_gen
-	ctx := context.Background()
 	req := &kitex.MessageChatRequest{
 		Token:    token,
 		ToUserId: toUserID,
@@ -51,7 +50,7 @@ func MessageChat(c *gin.Context) {
 	})
 }
 
-func MessageAction(c *gin.Context) {
+func MessageAction(ctx context.Context, c *app.RequestContext) {
 	token := c.Query("token")
 	if token == "" {
 		c.JSON(http.StatusOK, response.RelationAction{
@@ -85,7 +84,6 @@ func MessageAction(c *gin.Context) {
 	}
 
 	// 调用kitex/kitex_gen
-	ctx := context.Background()
 	req := &kitex.MessageActionRequest{
 		Token:      token,
 		ToUserId:   toUserID,

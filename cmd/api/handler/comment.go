@@ -2,16 +2,15 @@ package handler
 
 import (
 	"context"
-	"net/http"
-	"strconv"
-
 	"github.com/bytedance-youthcamp-jbzx/tiktok/cmd/api/rpc"
 	"github.com/bytedance-youthcamp-jbzx/tiktok/internal/response"
 	kitex "github.com/bytedance-youthcamp-jbzx/tiktok/kitex/kitex_gen/comment"
-	"github.com/gin-gonic/gin"
+	"github.com/cloudwego/hertz/pkg/app"
+	"net/http"
+	"strconv"
 )
 
-func CommentAction(c *gin.Context) {
+func CommentAction(ctx context.Context, c *app.RequestContext) {
 	token := c.Query("token")
 	vid, err := strconv.ParseInt(c.Query("video_id"), 10, 64)
 	if err != nil {
@@ -35,7 +34,6 @@ func CommentAction(c *gin.Context) {
 		})
 		return
 	}
-	ctx := context.Background()
 	req := new(kitex.CommentActionRequest)
 	req.Token = token
 	req.VideoId = vid
@@ -86,7 +84,7 @@ func CommentAction(c *gin.Context) {
 	})
 }
 
-func CommentList(c *gin.Context) {
+func CommentList(ctx context.Context, c *app.RequestContext) {
 	token := c.Query("token")
 	vid, err := strconv.ParseInt(c.Query("video_id"), 10, 64)
 	if err != nil {
@@ -99,7 +97,6 @@ func CommentList(c *gin.Context) {
 		})
 		return
 	}
-	ctx := context.Background()
 	req := &kitex.CommentListRequest{
 		Token:   token,
 		VideoId: vid,

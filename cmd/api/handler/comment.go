@@ -77,6 +77,7 @@ func CommentAction(c *gin.Context) {
 			},
 			Comment: nil,
 		})
+		return
 	}
 	c.JSON(http.StatusOK, response.CommentAction{
 		Base: response.Base{

@@ -28,8 +28,16 @@ func (s *CommentServiceImpl) CommentAction(ctx context.Context, req *comment.Com
 		return res, nil
 	}
 	userID := claims.Id
-
 	actionType := req.ActionType
+	v, _ := db.GetVideoById(ctx, req.VideoId)
+	if v == nil {
+		logger.Errorf("该视频ID不存在：%d", req.VideoId)
+		res := &comment.CommentActionResponse{
+			StatusCode: -1,
+			StatusMsg:  "该视频ID不存在",
+		}
+		return res, nil
+	}
 	if actionType == 1 {
 		cmt := &db.Comment{
 			VideoID: uint(req.VideoId),
@@ -46,9 +54,48 @@ func (s *CommentServiceImpl) CommentAction(ctx context.Context, req *comment.Com
 			return res, nil
 		}
 	} else if actionType == 2 {
-		err := db.DelCommentByID(ctx, req.CommentId, req.VideoId)
+		// 判断该评论是否发布自该用户，或该评论在该用户所发布的视频下
+		cmt, err := db.GetCommentByCommentID(ctx, req.CommentId)
 		if err != nil {
-			logger.Errorf("删除评论失败：%v", err.Error())
+			logger.Errorf("评论删除失败：%v", err.Error())
+			res := &comment.CommentActionResponse{
+				StatusCode: -1,
+				StatusMsg:  "评论删除失败：服务器内部错误",
+			}
+			return res, nil
+		}
+		if cmt == nil {
+			// 评论不存在，无法删除
+			logger.Errorf("评论删除失败，该评论ID不存在：%v", req.CommentId)
+			res := &comment.CommentActionResponse{
+				StatusCode: -1,
+				StatusMsg:  "评论删除失败：该评论不存在",
+			}
+			return res, nil
+		} else {
+			// 查找该视频的作者ID
+			v, err := db.GetVideoById(ctx, int64(cmt.VideoID))
+			if err != nil {
+				logger.Errorf("评论删除失败：%v", err.Error())
+				res := &comment.CommentActionResponse{
+					StatusCode: -1,
+					StatusMsg:  "评论删除失败：服务器内部错误",
+				}
+				return res, nil
+			}
+			// 若删除评论的用户不是发布评论的用户或该用户不是视频创作者
+			if userID != int64(cmt.UserID) || userID != int64(v.AuthorID) {
+				logger.Errorf("评论删除失败，没有权限：%v", err.Error())
+				res := &comment.CommentActionResponse{
+					StatusCode: -1,
+					StatusMsg:  "评论删除失败：没有权限",
+				}
+				return res, nil
+			}
+		}
+		err = db.DelCommentByID(ctx, req.CommentId, req.VideoId)
+		if err != nil {
+			logger.Errorf("评论删除失败：%v", err.Error())
 			res := &comment.CommentActionResponse{
 				StatusCode: -1,
 				StatusMsg:  "评论删除失败：服务器内部错误",

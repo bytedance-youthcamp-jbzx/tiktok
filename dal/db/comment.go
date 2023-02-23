@@ -127,3 +127,22 @@ func GetVideoCommentListByVideoID(ctx context.Context, videoID int64) ([]*Commen
 	}
 	return comments, nil
 }
+
+// GetCommentByCommentID
+//
+//	@Description: 根据评论ID获取评论
+//	@Date 2023-02-23 10:03:01
+//	@param ctx 数据库操作上下文
+//	@param id 评论id
+//	@return *Comment 评论
+//	@return error
+func GetCommentByCommentID(ctx context.Context, commentID int64) (*Comment, error) {
+	comment := new(Comment)
+	if err := GetDB().Clauses(dbresolver.Read).WithContext(ctx).Where("id = ?", commentID).First(&comment).Error; err == nil {
+		return comment, nil
+	} else if err == gorm.ErrRecordNotFound {
+		return nil, nil
+	} else {
+		return nil, err
+	}
+}

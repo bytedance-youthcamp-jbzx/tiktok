@@ -30,7 +30,7 @@ func (s *UserServiceImpl) Register(ctx context.Context, req *user.UserRegisterRe
 		}
 		return res, nil
 	} else if usr != nil {
-		logger.Errorln("该用户名已存在")
+		logger.Errorf("该用户名已存在：%s", usr.UserName)
 		res := &user.UserRegisterResponse{
 			StatusCode: -1,
 			StatusMsg:  "该用户名已存在，请更换",
@@ -53,6 +53,30 @@ func (s *UserServiceImpl) Register(ctx context.Context, req *user.UserRegisterRe
 		}
 		return res, nil
 	}
+
+	//if err := db.CreateUsers(ctx, []*db.User{{
+	//	UserName: req.Username,
+	//	Password: tool.Md5Encrypt(req.Password),
+	//	Avatar:   fmt.Sprintf("default%d.png", rand.Intn(10)),
+	//}}); err != nil {
+	//	logger.Errorf("发生错误：%v", err.Error())
+	//	res := &user.UserRegisterResponse{
+	//		StatusCode: -1,
+	//		StatusMsg:  "注册失败：服务器内部错误",
+	//	}
+	//	return res, nil
+	//}
+
+	// 获取用户id
+	//usr, err = db.GetUserByName(ctx, req.Username)
+	//if err != nil || usr == nil {
+	//	logger.Errorf("发生错误：%v", err.Error())
+	//	res := &user.UserRegisterResponse{
+	//		StatusCode: -1,
+	//		StatusMsg:  "注册失败：服务器内部错误",
+	//	}
+	//	return res, nil
+	//}
 
 	//生成token
 	claims := jwt.CustomClaims{Id: int64(usr.ID)}
@@ -143,6 +167,13 @@ func (s *UserServiceImpl) UserInfo(ctx context.Context, req *user.UserInfoReques
 		res := &user.UserInfoResponse{
 			StatusCode: -1,
 			StatusMsg:  "服务器内部错误：获取背景图失败",
+		}
+		return res, nil
+	} else if usr == nil {
+		logger.Errorf("该用户不存在：%v", err.Error())
+		res := &user.UserInfoResponse{
+			StatusCode: -1,
+			StatusMsg:  "该用户不存在",
 		}
 		return res, nil
 	}

@@ -75,6 +75,7 @@ func CommentAction(ctx context.Context, c *app.RequestContext) {
 			},
 			Comment: nil,
 		})
+		return
 	}
 	c.JSON(http.StatusOK, response.CommentAction{
 		Base: response.Base{

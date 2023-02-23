@@ -99,8 +99,8 @@ func FollowList(ctx context.Context, c *app.RequestContext) {
 		UserId: uid,
 		Token:  token,
 	}
-	res, err := rpc.RelationFollowList(ctx, req)
-	if err != nil {
+	res, _ := rpc.RelationFollowList(ctx, req)
+	if res.StatusCode == -1 {
 		c.JSON(http.StatusOK, response.FollowList{
 			Base: response.Base{
 				StatusCode: -1,

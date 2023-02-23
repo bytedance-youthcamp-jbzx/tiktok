@@ -47,6 +47,18 @@ func (s *RelationServiceImpl) RelationAction(ctx context.Context, req *relation.
 		}
 		return res, nil
 	}
+	// 检查ID是否存在
+	u1, _ := db.GetUserByID(ctx, userID)
+	u2, _ := db.GetUserByID(ctx, toUserID)
+	if u1 == nil || u2 == nil {
+		logger.Errorln("所请求的用户ID不存在")
+		res := &relation.RelationActionResponse{
+			StatusCode: -1,
+			StatusMsg:  "所请求的用户ID不存在",
+		}
+		return res, nil
+	}
+
 	// 将关注信息存入消息队列，成功存入则表示操作成功，后续处理由redis完成
 	relationCache := &redis.RelationCache{
 		UserID:     uint(userID),

@@ -70,6 +70,27 @@ func FavoriteMoveToDB() error {
 			logger.Errorln(err.Error())
 			return err
 		}
+
+		// 检查是否存在对应ID
+		v, err := db.GetVideoById(ctx, videoID)
+		if err != nil {
+			logger.Errorln(err.Error())
+			return err
+		}
+		u, err := db.GetUserByID(ctx, userID)
+		if err != nil {
+			logger.Errorln(err.Error())
+			return err
+		}
+		if v == nil || u == nil {
+			delErr := deleteKeys(ctx, key, favoriteMutex)
+			if delErr != nil {
+				logger.Errorln(delErr.Error())
+				return delErr
+			}
+			continue
+		}
+
 		// 查询是否存在点赞记录
 		favorite, err := db.GetFavoriteVideoRelationByUserVideoID(ctx, userID, videoID)
 		if err != nil {
@@ -152,6 +173,27 @@ func RelationMoveToDB() error {
 			logger.Errorln(err.Error())
 			return err
 		}
+
+		// 检查是否存在对应ID
+		u, err := db.GetUserByID(ctx, userID)
+		if err != nil {
+			logger.Errorln(err.Error())
+			return err
+		}
+		tu, err := db.GetUserByID(ctx, toUserID)
+		if err != nil {
+			logger.Errorln(err.Error())
+			return err
+		}
+		if u == nil || tu == nil {
+			delErr := deleteKeys(ctx, key, favoriteMutex)
+			if delErr != nil {
+				logger.Errorln(delErr.Error())
+				return delErr
+			}
+			continue
+		}
+
 		// 查询是否存在关注记录
 		relation, err := db.GetRelationByUserIDs(ctx, userID, toUserID)
 		if err != nil {

@@ -138,7 +138,7 @@ func PublishAction(c *gin.Context) {
 		Title: title,
 		Data:  buf.Bytes(),
 	}
-	res, err := rpc.PublishAction(ctx, req)
+	res, _ := rpc.PublishAction(ctx, req)
 	if res.StatusCode == -1 {
 		c.JSON(http.StatusOK, response.PublishAction{
 			Base: response.Base{

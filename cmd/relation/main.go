@@ -4,15 +4,14 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/cloudwego/kitex/pkg/limit"
-	"github.com/cloudwego/kitex/pkg/rpcinfo"
-
 	"github.com/bytedance-youthcamp-jbzx/tiktok/cmd/relation/service"
 	"github.com/bytedance-youthcamp-jbzx/tiktok/kitex/kitex_gen/relation/relationservice"
 	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/etcd"
 	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/middleware"
 	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/viper"
 	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/zap"
+	"github.com/cloudwego/kitex/pkg/limit"
+	"github.com/cloudwego/kitex/pkg/rpcinfo"
 	"github.com/cloudwego/kitex/server"
 )
 
@@ -30,7 +29,7 @@ func init() {
 }
 
 func main() {
-	// defer logger.Sync()
+	defer service.RelationMq.Destroy()
 
 	// 服务注册
 	r, err := etcd.NewEtcdRegistry([]string{etcdAddr})
@@ -51,7 +50,7 @@ func main() {
 		server.WithRegistry(r),
 		server.WithLimit(&limit.Option{MaxConnections: 1000, MaxQPS: 100}),
 		server.WithMuxTransport(),
-		// server.WithSuite(tracing.NewServerSuite()),
+		//server.WithSuite(tracing.NewServerSuite()),
 		server.WithServerBasicInfo(&rpcinfo.EndpointBasicInfo{ServiceName: serviceName}),
 	)
 

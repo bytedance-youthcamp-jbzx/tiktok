@@ -16,14 +16,14 @@ redis里的键值，即便没有新的消息传来。
 func GetMessageTimestamp(ctx context.Context, token string, toUserID int64) (int, error) {
 	key := fmt.Sprintf("%s_%d", token, toUserID)
 	if ec, err := GetRedisHelper().Exists(ctx, key).Result(); err != nil {
-		return 0, err
+		return -1, err
 	} else if ec == 0 {
-		return 0, nil //errors.New("key not found")
+		return -1, nil //errors.New("key not found")
 	}
 
 	val, err := GetRedisHelper().Get(ctx, key).Result()
 	if err != nil {
-		return 0, err
+		return -1, err
 	}
 
 	return strconv.Atoi(val)

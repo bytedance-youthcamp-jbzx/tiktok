@@ -3,12 +3,17 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/bytedance-youthcamp-jbzx/tiktok/dal/db"
 	"github.com/bytedance-youthcamp-jbzx/tiktok/dal/redis"
 	favorite "github.com/bytedance-youthcamp-jbzx/tiktok/kitex/kitex_gen/favorite"
 	user "github.com/bytedance-youthcamp-jbzx/tiktok/kitex/kitex_gen/user"
 	video "github.com/bytedance-youthcamp-jbzx/tiktok/kitex/kitex_gen/video"
 	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/minio"
+	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/rabbitmq"
+	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/zap"
+	amqp "github.com/rabbitmq/amqp091-go"
+	"strings"
 )
 
 // FavoriteServiceImpl implements the last service interface defined in the IDL.
@@ -16,6 +21,7 @@ type FavoriteServiceImpl struct{}
 
 // FavoriteAction implements the FavoriteServiceImpl interface.
 func (s *FavoriteServiceImpl) FavoriteAction(ctx context.Context, req *favorite.FavoriteActionRequest) (resp *favorite.FavoriteActionResponse, err error) {
+	logger := zap.InitLogger()
 	// 解析token,获取用户id
 	claims, err := Jwt.ParseToken(req.Token)
 	if err != nil {
@@ -36,8 +42,16 @@ func (s *FavoriteServiceImpl) FavoriteAction(ctx context.Context, req *favorite.
 		//CreatedAt:  time.Now(),
 	}
 	jsonFC, _ := json.Marshal(fc)
+	fmt.Println("Publish new message: ", fc)
 	if err = FavoriteMq.PublishSimple(ctx, jsonFC); err != nil {
-		logger.Errorf("消息队列发布错误:%v", err.Error())
+		logger.Errorf("消息队列发布错误：%v", err.Error())
+		if strings.Contains(err.Error(), amqp.ErrClosed.Reason) {
+			// 检测到通道关闭，则重连
+			FavoriteMq.Destroy()
+			FavoriteMq = rabbitmq.NewRabbitMQSimple("favorite")
+			logger.Errorln("消息队列通道尝试重连：favorite")
+			go consume()
+		}
 		res := &favorite.FavoriteActionResponse{
 			StatusCode: -1,
 			StatusMsg:  "操作失败：服务器内部错误",

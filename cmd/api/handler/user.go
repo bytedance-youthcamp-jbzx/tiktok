@@ -104,7 +104,27 @@ func Login(ctx context.Context, c *app.RequestContext) {
 func UserInfo(ctx context.Context, c *app.RequestContext) {
 	userId := c.Query("user_id")
 	token := c.Query("token")
-	id, _ := strconv.ParseInt(userId, 10, 64)
+	if len(token) == 0 {
+		c.JSON(http.StatusOK, response.UserInfo{
+			Base: response.Base{
+				StatusCode: -1,
+				StatusMsg:  "token 已过期",
+			},
+			User: nil,
+		})
+		return
+	}
+	id, err := strconv.ParseInt(userId, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusOK, response.UserInfo{
+			Base: response.Base{
+				StatusCode: -1,
+				StatusMsg:  "user_id 不合法",
+			},
+			User: nil,
+		})
+		return
+	}
 
 	//调用kitex/kitex_genit
 	req := &kitex.UserInfoRequest{

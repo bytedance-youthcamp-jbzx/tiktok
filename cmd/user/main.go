@@ -5,7 +5,6 @@ import (
 	"net"
 
 	"github.com/bytedance-youthcamp-jbzx/tiktok/cmd/user/service"
-	"github.com/kitex-contrib/obs-opentelemetry/tracing"
 
 	"github.com/bytedance-youthcamp-jbzx/tiktok/kitex/kitex_gen/user/userservice"
 	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/etcd"
@@ -52,7 +51,7 @@ func main() {
 		server.WithRegistry(r),
 		server.WithLimit(&limit.Option{MaxConnections: 1000, MaxQPS: 100}),
 		server.WithMuxTransport(),
-		server.WithSuite(tracing.NewServerSuite()),
+		//server.WithSuite(tracing.NewServerSuite()),
 		server.WithServerBasicInfo(&rpcinfo.EndpointBasicInfo{ServiceName: serviceName}),
 	)
 

@@ -2,12 +2,13 @@ package handler
 
 import (
 	"context"
-	"github.com/bytedance-youthcamp-jbzx/tiktok/cmd/api/rpc"
-	"github.com/bytedance-youthcamp-jbzx/tiktok/internal/response"
-	kitex "github.com/bytedance-youthcamp-jbzx/tiktok/kitex/kitex_gen/comment"
 	"github.com/cloudwego/hertz/pkg/app"
 	"net/http"
 	"strconv"
+
+	"github.com/bytedance-youthcamp-jbzx/tiktok/cmd/api/rpc"
+	"github.com/bytedance-youthcamp-jbzx/tiktok/internal/response"
+	kitex "github.com/bytedance-youthcamp-jbzx/tiktok/kitex/kitex_gen/comment"
 )
 
 func CommentAction(ctx context.Context, c *app.RequestContext) {

@@ -83,6 +83,16 @@ func MessageAction(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
+	if len(c.Query("content")) == 0 {
+		c.JSON(http.StatusOK, response.MessageAction{
+			Base: response.Base{
+				StatusCode: -1,
+				StatusMsg:  "参数 content 不能为空",
+			},
+		})
+		return
+	}
+
 	// 调用kitex/kitex_gen
 	req := &kitex.MessageActionRequest{
 		Token:      token,

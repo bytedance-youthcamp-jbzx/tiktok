@@ -30,8 +30,7 @@ func init() {
 }
 
 func main() {
-	// logger = z.InitLogger()
-	// defer logger.Sync()
+	defer service.FavoriteMq.Destroy()
 
 	// 服务注册
 	r, err := etcd.NewEtcdRegistry([]string{etcdAddr})

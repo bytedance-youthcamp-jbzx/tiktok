@@ -78,7 +78,7 @@ func GetUserByID(ctx context.Context, userID int64) (*User, error) {
 
 // CreateUsers
 //
-//	@Description: 新增多条条用户数据
+//	@Description: 新增多条用户数据
 //	@Date 2023-01-21 17:13:26
 //	@param ctx 数据库操作上下文
 //	@param users 用户数据列表
@@ -96,9 +96,9 @@ func CreateUsers(ctx context.Context, users []*User) error {
 // CreateUser
 //
 //	@Description: 新增一条用户数据
-//	@Date 2023-02-22 11:47:43
+//	@Date 2023-02-22 11:46:43
 //	@param ctx 数据库操作上下文
-//	@param users 用户数据
+//	@param user 用户数据
 //	@return error
 func CreateUser(ctx context.Context, user *User) error {
 	err := GetDB().Clauses(dbresolver.Write).WithContext(ctx).Transaction(func(tx *gorm.DB) error {

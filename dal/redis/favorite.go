@@ -20,48 +20,34 @@ type FavoriteCache struct {
 * 2. set存储某个类型点赞的记录，Key为video::vid::user::uid，hashKey为点赞视频+点赞人，Value为action_type
  */
 func UpdateFavorite(ctx context.Context, favorite *FavoriteCache) error {
-	//keyVideo := fmt.Sprintf("video::%d", favorite.VideoID)
+	errLock := LockByMutex(ctx, favoriteMutex)
 	// Read 用于与前端同步，且创建定时器检查是否过期；Write 用于与前端同步，不设置过期，但是需要定时与MySQL同步后进行删除
 	keyUserIDRead := fmt.Sprintf("video::%d::user::%d::r", favorite.VideoID, favorite.UserID)
 	keyUserIDWrite := fmt.Sprintf("video::%d::user::%d::w", favorite.VideoID, favorite.UserID)
-	//if favorite.ActionType == 1 {
-	//	_, err := GetRedisHelper().SAdd(ctx, keyVideo, favorite.UserID).Result()
-	//	if err != nil {
-	//		zapLogger.Errorln(err.Error())
-	//		return err
-	//	}
-	//	//userMap := make(map[string]interface{})
-	//	//userMap["created_at"] = favorite.CreatedAt.Format("2006-01-02 15:04:05")
-	//	//_, err = GetRedisHelper().Set(ctx, keyUserID, favorite.CreatedAt.Format("2006-01-02 15:04:05"), 0).Result()
-	//} else if favorite.ActionType == 2 {
-	//	err := GetRedisHelper().SRem(ctx, keyVideo, 1, keyUserIDRead).Err()
-	//	if err != nil {
-	//		zapLogger.Errorln(err.Error())
-	//		return err
-	//	}
-	//} else {
-	//	zapLogger.Errorln("\"action_type\" is not equal to 1 or 2")
-	//	return errors.New("\"action_type\" is not equal to 1 or 2")
-	//}
+	if errLock != nil {
+		zapLogger.Errorf("lock failed: %s", errLock.Error())
+		return errLock
+	}
 	_, err := GetRedisHelper().Set(ctx, keyUserIDRead, favorite.ActionType, ExpireTime).Result()
 	if err != nil {
+		errUnlock := UnlockByMutex(ctx, favoriteMutex)
+		if errUnlock != nil {
+			zapLogger.Errorf("unlock failed: %s", errUnlock.Error())
+			return errUnlock
+		}
 		zapLogger.Errorln(err.Error())
 		return err
 	}
-	err = LockByMutex(ctx, favoriteMutex)
-	if err != nil {
-		zapLogger.Errorf("lock failed: %s", err.Error())
-		return err
+	fmt.Println(keyUserIDWrite, " => ", favorite.ActionType)
+	_, err = GetRedisHelper().Set(ctx, keyUserIDWrite, favorite.ActionType, 0).Result()
+	errUnlock := UnlockByMutex(ctx, favoriteMutex)
+	if errUnlock != nil {
+		zapLogger.Errorf("unlock failed: %s", errUnlock.Error())
+		return errUnlock
 	}
-	_, err1 := GetRedisHelper().Set(ctx, keyUserIDWrite, favorite.ActionType, 0).Result()
-	err = UnlockByMutex(ctx, favoriteMutex)
 	if err != nil {
-		zapLogger.Errorf("unlock failed: %s", err.Error())
+		zapLogger.Errorln(err.Error())
 		return err
-	}
-	if err1 != nil {
-		zapLogger.Errorln(err1.Error())
-		return err1
 	}
 	return nil
 }

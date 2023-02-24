@@ -30,7 +30,7 @@ func init() {
 }
 
 func main() {
-	// defer logger.Sync()
+	defer service.RelationMq.Destroy()
 
 	// 服务注册
 	r, err := etcd.NewEtcdRegistry([]string{etcdAddr})

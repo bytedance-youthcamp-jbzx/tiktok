@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+
 	"github.com/bytedance-youthcamp-jbzx/tiktok/dal/db"
 	"github.com/bytedance-youthcamp-jbzx/tiktok/dal/redis"
 	"github.com/bytedance-youthcamp-jbzx/tiktok/internal/tool"
@@ -39,8 +40,9 @@ func (s *MessageServiceImpl) MessageChat(ctx context.Context, req *message.Messa
 	}
 
 	var results []*db.Message
-	if lastTimestamp == 0 {
+	if lastTimestamp == -1 {
 		results, err = db.GetMessagesByUserIDs(ctx, userID, req.ToUserId, int64(lastTimestamp))
+		lastTimestamp = 0
 	} else {
 		results, err = db.GetMessagesByUserToUser(ctx, req.ToUserId, userID, int64(lastTimestamp))
 	}
@@ -122,6 +124,25 @@ func (s *MessageServiceImpl) MessageAction(ctx context.Context, req *message.Mes
 	userID := claims.Id
 
 	toUserID, actionType := req.ToUserId, req.ActionType
+
+	if userID == toUserID {
+		logger.Errorln("不能给自己发送消息")
+		res := &message.MessageActionResponse{
+			StatusCode: -1,
+			StatusMsg:  "消息发送失败：不能给自己发送消息",
+		}
+		return res, nil
+	}
+
+	relation, err := db.GetRelationByUserIDs(ctx, userID, toUserID)
+	if relation == nil {
+		logger.Errorf("消息发送失败：非朋友关系，无法发送")
+		res := &message.MessageActionResponse{
+			StatusCode: -1,
+			StatusMsg:  "消息发送失败：非朋友关系，无法发送",
+		}
+		return res, nil
+	}
 
 	rsaContent, err := tool.RsaEncrypt([]byte(req.Content), publicKey)
 	if err != nil {

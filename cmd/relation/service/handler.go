@@ -9,7 +9,10 @@ import (
 	relation "github.com/bytedance-youthcamp-jbzx/tiktok/kitex/kitex_gen/relation"
 	user "github.com/bytedance-youthcamp-jbzx/tiktok/kitex/kitex_gen/user"
 	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/minio"
+	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/rabbitmq"
 	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/zap"
+	amqp "github.com/rabbitmq/amqp091-go"
+	"strings"
 )
 
 // RelationServiceImpl implements the last service interface defined in the IDL.
@@ -68,7 +71,14 @@ func (s *RelationServiceImpl) RelationAction(ctx context.Context, req *relation.
 	}
 	jsonRc, _ := json.Marshal(relationCache)
 	if err = RelationMq.PublishSimple(ctx, jsonRc); err != nil {
-		logger.Errorln(err.Error())
+		logger.Errorf("消息队列发布错误：%v", err.Error())
+		if strings.Contains(err.Error(), amqp.ErrClosed.Reason) {
+			// 检测到通道关闭，则重连
+			RelationMq.Destroy()
+			RelationMq = rabbitmq.NewRabbitMQSimple("relation")
+			logger.Errorln("消息队列通道尝试重连：relation")
+			go consume()
+		}
 		res := &relation.RelationActionResponse{
 			StatusCode: -1,
 			StatusMsg:  "服务器内部错误：操作失败",

@@ -15,5 +15,6 @@ var (
 
 func Init(signingKey string) {
 	Jwt = jwt.NewJWT([]byte(signingKey))
-	GoCron()
+	//GoCron()
+	go consume()
 }

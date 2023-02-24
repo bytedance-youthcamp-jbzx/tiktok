@@ -45,6 +45,8 @@ type TokenBuckets struct {
 	buckets  map[string]*TokenBucket
 	capacity int64
 	rate     int64
+
+	lock sync.Mutex
 }
 
 func MakeTokenBuckets(capacity, rate int64) *TokenBuckets {
@@ -56,6 +58,8 @@ func MakeTokenBuckets(capacity, rate int64) *TokenBuckets {
 }
 
 func (tbs *TokenBuckets) Allow(token string) bool {
+	tbs.lock.Lock()
+	defer tbs.lock.Unlock()
 	if bucket, ok := tbs.buckets[token]; ok {
 		return bucket.Allow()
 	} else {

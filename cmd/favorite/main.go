@@ -30,8 +30,7 @@ func init() {
 }
 
 func main() {
-	// logger = z.InitLogger()
-	// defer logger.Sync()
+	defer service.FavoriteMq.Destroy()
 
 	// 服务注册
 	r, err := etcd.NewEtcdRegistry([]string{etcdAddr})
@@ -52,7 +51,7 @@ func main() {
 		server.WithRegistry(r),
 		server.WithLimit(&limit.Option{MaxConnections: 1000, MaxQPS: 100}),
 		server.WithMuxTransport(),
-		// server.WithSuite(tracing.NewServerSuite()),
+		//server.WithSuite(tracing.NewServerSuite()),
 		server.WithServerBasicInfo(&rpcinfo.EndpointBasicInfo{ServiceName: serviceName}),
 	)
 

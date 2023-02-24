@@ -85,7 +85,7 @@ func (s *CommentServiceImpl) CommentAction(ctx context.Context, req *comment.Com
 			}
 			// 若删除评论的用户不是发布评论的用户或该用户不是视频创作者
 			if userID != int64(cmt.UserID) || userID != int64(v.AuthorID) {
-				logger.Errorf("评论删除失败，没有权限：%v", err.Error())
+				logger.Errorf("评论删除失败，没有权限：%v", cmt.UserID)
 				res := &comment.CommentActionResponse{
 					StatusCode: -1,
 					StatusMsg:  "评论删除失败：没有权限",

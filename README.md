@@ -4,7 +4,6 @@
 
 **基于 “Hertz/Gin HTTP框架 + Kitex 微服务框架” 完成的第五届字节跳动青训营—极简版抖音项目**
 
-- 项目服务地址：https://1.12.68.184:8089/
 - Github 地址：https://github.com/bytedance-youthcamp-jbzx/tiktok
 
 # 二、项目实现

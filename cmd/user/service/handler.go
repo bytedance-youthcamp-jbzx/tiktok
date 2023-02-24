@@ -170,7 +170,7 @@ func (s *UserServiceImpl) UserInfo(ctx context.Context, req *user.UserInfoReques
 		}
 		return res, nil
 	} else if usr == nil {
-		logger.Errorf("该用户不存在：%d", userID)
+		logger.Errorf("该用户不存在：%v", err.Error())
 		res := &user.UserInfoResponse{
 			StatusCode: -1,
 			StatusMsg:  "该用户不存在",

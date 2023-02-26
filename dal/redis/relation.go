@@ -4,19 +4,48 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 )
 
 type RelationCache struct {
 	UserID     uint `json:"user_id" redis:"user_id"`
 	ToUserID   uint `json:"to_user_id" redis:"to_user_id"`
 	ActionType uint `json:"action_type" redis:"action_type"`
-	//CreatedAt  time.Time `json:"created_at" redis:"created_at"`
+	CreatedAt  uint `json:"created_at" redis:"created_at"`
 }
 
 // UpdateRelation 更新关系
 func UpdateRelation(ctx context.Context, relation *RelationCache) error {
 	// 在userID的关注列表中加入toUserID，同时在toUserID的粉丝列表中加入userID
-	errLock := LockByMutex(ctx, relationMutex)
+	//keyFollower, keyFollowing := fmt.Sprintf("follower::%d", relation.ToUserID), fmt.Sprintf("following::%d", relation.UserID)
+
+	//if relation.ActionType == 1 {
+	//	// 添加user的关注者id
+	//	if err := GetRedisHelper().SAdd(ctx, keyFollower, relation.UserID).Err(); err != nil {
+	//		zapLogger.Errorln(err.Error())
+	//		return err
+	//	}
+	//	// 添加to_user的粉丝id
+	//	if err := GetRedisHelper().SAdd(ctx, keyFollowing, relation.ToUserID).Err(); err != nil {
+	//		zapLogger.Errorln(err.Error())
+	//		return err
+	//	}
+	//} else if relation.ActionType == 2 {
+	//	// 删除user的关注者id
+	//	if err := GetRedisHelper().SRem(ctx, keyFollowing, 1, keyFollower).Err(); err != nil {
+	//		zapLogger.Errorln(err.Error())
+	//		return err
+	//	}
+	//	// 删除to_user的粉丝id
+	//	if err := GetRedisHelper().SRem(ctx, keyFollower, 1, keyFollowing).Err(); err != nil {
+	//		zapLogger.Errorln(err.Error())
+	//		return err
+	//	}
+	//} else {
+	//	zapLogger.Errorln("\"action_type\" is not equal to 1 or 2")
+	//	return errors.New("\"action_type\" is not equal to 1 or 2")
+	//}
+	errLock := LockByMutex(ctx, RelationMutex)
 	if errLock != nil {
 		zapLogger.Errorf("lock failed: %s", errLock.Error())
 		return errLock
@@ -24,24 +53,75 @@ func UpdateRelation(ctx context.Context, relation *RelationCache) error {
 
 	keyRelationRead := fmt.Sprintf("user::%d::to_user::%d::r", relation.UserID, relation.ToUserID)
 	keyRelationWrite := fmt.Sprintf("user::%d::to_user::%d::w", relation.UserID, relation.ToUserID)
+	valueRedis := fmt.Sprintf("%d::%d", relation.CreatedAt, relation.ActionType)
 
-	err := GetRedisHelper().Set(ctx, keyRelationRead, relation.ActionType, ExpireTime).Err()
+	readExisted, err := GetRedisHelper().Exists(ctx, keyRelationWrite).Result()
 	if err != nil {
-		zapLogger.Errorln(err.Error())
+		errUnlock := UnlockByMutex(ctx, RelationMutex)
+		if errUnlock != nil {
+			zapLogger.Errorf("unlock failed: %s", errUnlock.Error())
+			return errUnlock
+		}
+		zapLogger.Errorf("Get Redis data error: %v", err.Error())
 		return err
 	}
-	err = GetRedisHelper().Set(ctx, keyRelationWrite, relation.ActionType, 0).Err()
+	if readExisted == 0 {
+		// redis中不存在，直接加入
+		err := setKey(ctx, keyRelationRead, valueRedis, ExpireTime, RelationMutex)
+		if err != nil {
+			zapLogger.Errorln(err.Error())
+			return err
+		}
 
-	errUnlock := UnlockByMutex(ctx, relationMutex)
-	if errUnlock != nil {
-		zapLogger.Errorf("lock failed: %s", errUnlock.Error())
-		return errUnlock
+		errLock := LockByMutex(ctx, RelationMutex)
+		if errLock != nil {
+			zapLogger.Errorf("lock failed: %s", errLock.Error())
+			return errLock
+		}
+		err = setKey(ctx, keyRelationWrite, valueRedis, 0, RelationMutex)
+		if err != nil {
+			zapLogger.Errorln(err.Error())
+			return err
+		}
+	} else {
+		res, _ := GetRedisHelper().Get(ctx, keyRelationRead).Result()
+		vSplit := strings.Split(res, "::")
+		redis_ct, redis_at := vSplit[0], vSplit[1]
+		if redis_at == strconv.Itoa(int(relation.ActionType)) {
+			// 若新增的action_type不变，则直接返回
+			errUnlock := UnlockByMutex(ctx, RelationMutex)
+			if errUnlock != nil {
+				zapLogger.Errorf("unlock failed: %s", errUnlock.Error())
+				return errUnlock
+			}
+			return nil
+		} else if strconv.Itoa(int(relation.CreatedAt)) > redis_ct {
+			// 若action_type改变，且该消息创建时间晚于redis中的消息时间，则替换
+			err := setKey(ctx, keyRelationRead, valueRedis, ExpireTime, RelationMutex)
+			if err != nil {
+				zapLogger.Errorln(err.Error())
+				return err
+			}
+
+			errLock := LockByMutex(ctx, RelationMutex)
+			if errLock != nil {
+				zapLogger.Errorf("lock failed: %s", errLock.Error())
+				return errLock
+			}
+			err = setKey(ctx, keyRelationWrite, valueRedis, 0, RelationMutex)
+			if err != nil {
+				zapLogger.Errorln(err.Error())
+				return err
+			}
+		} else {
+			errUnlock := UnlockByMutex(ctx, RelationMutex)
+			if errUnlock != nil {
+				zapLogger.Errorf("unlock failed: %s", errUnlock.Error())
+				return errUnlock
+			}
+		}
 	}
 
-	if err != nil {
-		zapLogger.Errorln(err.Error())
-		return err
-	}
 	return nil
 }
 

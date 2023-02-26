@@ -21,11 +21,21 @@ func consume() error {
 	}
 	// 将消息队列的消息全部取出
 	for msg := range msgs {
+		//err := redis.LockByMutex(context.Background(), redis.RelationMutex)
+		//if err != nil {
+		//	logger.Errorf("Redis mutex lock error: %s", err.Error())
+		//	return err
+		//}
 		rc := new(redis.RelationCache)
 		// 解析json
 		if err = json.Unmarshal(msg.Body, &rc); err != nil {
 			fmt.Println("json unmarshal error:" + err.Error())
 			logger.Errorf("RelationMQ Err: %s", err.Error())
+			//err = redis.UnlockByMutex(context.Background(), redis.RelationMutex)
+			//if err != nil {
+			//	logger.Errorf("Redis mutex unlock error: %s", err.Error())
+			//	return err
+			//}
 			continue
 		}
 		fmt.Printf("==> Get new message: %v\n", rc)
@@ -33,8 +43,18 @@ func consume() error {
 		if err = redis.UpdateRelation(context.Background(), rc); err != nil {
 			fmt.Println("add to redis error:" + err.Error())
 			logger.Errorf("RelationMQ Err: %s", err.Error())
+			//err = redis.UnlockByMutex(context.Background(), redis.RelationMutex)
+			//if err != nil {
+			//	logger.Errorf("Redis mutex unlock error: %s", err.Error())
+			//	return err
+			//}
 			continue
 		}
+		//err = redis.UnlockByMutex(context.Background(), redis.RelationMutex)
+		//if err != nil {
+		//	logger.Errorf("Redis mutex unlock error: %s", err.Error())
+		//	return err
+		//}
 	}
 	return nil
 }

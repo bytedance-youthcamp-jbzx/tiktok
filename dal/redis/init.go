@@ -13,15 +13,15 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-const ExpireTime = 5 * time.Second
+const ExpireTime = 6 * time.Second
 
 var (
 	config        = viper.Init("db")
 	zapLogger     = zap.InitLogger()
 	redisOnce     sync.Once
 	redisHelper   *RedisHelper
-	favoriteMutex *redsync.Mutex
-	relationMutex *redsync.Mutex
+	FavoriteMutex *redsync.Mutex
+	RelationMutex *redsync.Mutex
 )
 
 type RedisHelper struct {
@@ -89,6 +89,6 @@ func init() {
 	// Create an instance of redisync to be used to obtain a mutual exclusion lock.
 	rs := redsync.New(pool)
 	// Obtain a new mutex by using the same name for all instances wanting the same lock.
-	favoriteMutex = rs.NewMutex("mutex-favorite")
-	relationMutex = rs.NewMutex("mutex-relation")
+	FavoriteMutex = rs.NewMutex("mutex-favorite")
+	RelationMutex = rs.NewMutex("mutex-relation")
 }

@@ -3,12 +3,14 @@ package redis
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/bytedance-youthcamp-jbzx/tiktok/dal/db"
 	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/gocron"
 	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/zap"
 	"github.com/go-redsync/redsync/v4"
 	"strconv"
 	"strings"
+	"time"
 )
 
 const frequency = 10
@@ -42,6 +44,19 @@ func deleteKeys(ctx context.Context, key string, mutex *redsync.Mutex) error {
 	return nil
 }
 
+func setKey(ctx context.Context, key string, value string, expireTime time.Duration, mutex *redsync.Mutex) error {
+	fmt.Println(key, " => ", value)
+	_, err := GetRedisHelper().Set(ctx, key, value, expireTime).Result()
+	errUnlock := UnlockByMutex(ctx, mutex)
+	if errUnlock != nil {
+		return errors.New("unlock failed: " + errUnlock.Error())
+	}
+	if err != nil {
+		return errors.New("Redis set key failed: " + err.Error())
+	}
+	return nil
+}
+
 func FavoriteMoveToDB() error {
 	logger := zap.InitLogger()
 
@@ -52,12 +67,17 @@ func FavoriteMoveToDB() error {
 		return err
 	}
 	for _, key := range keys {
-		actionType, err := GetRedisHelper().Get(ctx, key).Result()
+		LockByMutex(ctx, FavoriteMutex)
+		res, err := GetRedisHelper().Get(ctx, key).Result()
+		UnlockByMutex(ctx, FavoriteMutex)
 		if err != nil {
 			logger.Errorln(err.Error())
 			return err
 		}
-		// 拆分得key
+		// 拆分得 value
+		vSplit := strings.Split(res, "::")
+		_, redisAt := vSplit[0], vSplit[1]
+		// 拆分得 key
 		kSplit := strings.Split(key, "::")
 		vid, uid := kSplit[1], kSplit[3]
 		videoID, err := strconv.ParseInt(vid, 10, 64)
@@ -83,7 +103,7 @@ func FavoriteMoveToDB() error {
 			return err
 		}
 		if v == nil || u == nil {
-			delErr := deleteKeys(ctx, key, favoriteMutex)
+			delErr := deleteKeys(ctx, key, FavoriteMutex)
 			if delErr != nil {
 				logger.Errorln(delErr.Error())
 				return delErr
@@ -96,7 +116,7 @@ func FavoriteMoveToDB() error {
 		if err != nil {
 			logger.Errorln(err.Error())
 			return err
-		} else if favorite == nil && actionType == "1" {
+		} else if favorite == nil && redisAt == "1" {
 			// 数据库中没有该点赞记录，且最终状态为点赞，则插入数据库
 			video, err := db.GetVideoById(ctx, videoID)
 			if err != nil {
@@ -105,7 +125,7 @@ func FavoriteMoveToDB() error {
 			}
 			err = db.CreateVideoFavorite(ctx, userID, videoID, int64(video.AuthorID))
 			// 插入后，删除Redis中对应记录
-			delErr := deleteKeys(ctx, key, favoriteMutex)
+			delErr := deleteKeys(ctx, key, FavoriteMutex)
 			if delErr != nil {
 				logger.Errorln(delErr.Error())
 				return delErr
@@ -114,7 +134,7 @@ func FavoriteMoveToDB() error {
 				logger.Errorln(err.Error())
 				return err
 			}
-		} else if favorite != nil && actionType == "2" {
+		} else if favorite != nil && redisAt == "2" {
 			// 数据库中有该点赞记录，且最终状态为取消点赞，则从数据库中删除该记录
 			video, err := db.GetVideoById(ctx, videoID)
 			if err != nil {
@@ -123,7 +143,7 @@ func FavoriteMoveToDB() error {
 			}
 			err = db.DelFavoriteByUserVideoID(ctx, userID, videoID, int64(video.AuthorID))
 			// 插入后，删除Redis中对应记录
-			delErr := deleteKeys(ctx, key, favoriteMutex)
+			delErr := deleteKeys(ctx, key, FavoriteMutex)
 			if delErr != nil {
 				logger.Errorln(delErr.Error())
 				return delErr
@@ -135,7 +155,7 @@ func FavoriteMoveToDB() error {
 		} else {
 			// 其他情况
 			// 插入后，删除Redis中对应记录
-			delErr := deleteKeys(ctx, key, favoriteMutex)
+			delErr := deleteKeys(ctx, key, FavoriteMutex)
 			if delErr != nil {
 				logger.Errorln(delErr.Error())
 				return delErr
@@ -155,7 +175,9 @@ func RelationMoveToDB() error {
 		return err
 	}
 	for _, key := range keys {
-		actionType, err := GetRedisHelper().Get(ctx, key).Result()
+		res, err := GetRedisHelper().Get(ctx, key).Result()
+		vSplit := strings.Split(res, "::")
+		_, redisAt := vSplit[0], vSplit[1]
 		if err != nil {
 			logger.Errorln(err.Error())
 			return err
@@ -186,7 +208,7 @@ func RelationMoveToDB() error {
 			return err
 		}
 		if u == nil || tu == nil {
-			delErr := deleteKeys(ctx, key, favoriteMutex)
+			delErr := deleteKeys(ctx, key, RelationMutex)
 			if delErr != nil {
 				logger.Errorln(delErr.Error())
 				return delErr
@@ -199,11 +221,11 @@ func RelationMoveToDB() error {
 		if err != nil {
 			logger.Errorln(err.Error())
 			return err
-		} else if relation == nil && actionType == "1" {
+		} else if relation == nil && redisAt == "1" {
 			// 数据库中没有该关注记录，且最终状态为关注，则插入数据库
 			err = db.CreateRelation(ctx, userID, toUserID)
 			// 插入后，删除Redis中对应记录
-			delErr := deleteKeys(ctx, key, relationMutex)
+			delErr := deleteKeys(ctx, key, RelationMutex)
 			if delErr != nil {
 				logger.Errorln(delErr.Error())
 				return delErr
@@ -212,11 +234,11 @@ func RelationMoveToDB() error {
 				logger.Errorln(err.Error())
 				return err
 			}
-		} else if relation != nil && actionType == "2" {
+		} else if relation != nil && redisAt == "2" {
 			// 数据库中有该关注记录，且最终状态为取消关注，则从数据库中删除该记录
 			err = db.DelRelationByUserIDs(ctx, userID, toUserID)
 			// 删除Redis中对应记录
-			delErr := deleteKeys(ctx, key, relationMutex)
+			delErr := deleteKeys(ctx, key, RelationMutex)
 			if delErr != nil {
 				logger.Errorln(delErr.Error())
 				return delErr
@@ -227,7 +249,7 @@ func RelationMoveToDB() error {
 			}
 		}
 		// 删除Redis中对应记录
-		delErr := deleteKeys(ctx, key, relationMutex)
+		delErr := deleteKeys(ctx, key, RelationMutex)
 		if delErr != nil {
 			logger.Errorln(delErr.Error())
 			return delErr

@@ -14,6 +14,7 @@ import (
 	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/zap"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"strings"
+	"time"
 )
 
 // FavoriteServiceImpl implements the last service interface defined in the IDL.
@@ -39,7 +40,7 @@ func (s *FavoriteServiceImpl) FavoriteAction(ctx context.Context, req *favorite.
 		VideoID:    uint(req.VideoId),
 		UserID:     uint(userID),
 		ActionType: uint(req.ActionType),
-		//CreatedAt:  time.Now(),
+		CreatedAt:  uint(time.Now().UnixMilli()),
 	}
 	jsonFC, _ := json.Marshal(fc)
 	fmt.Println("Publish new message: ", fc)

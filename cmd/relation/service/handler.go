@@ -13,6 +13,7 @@ import (
 	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/zap"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"strings"
+	"time"
 )
 
 // RelationServiceImpl implements the last service interface defined in the IDL.
@@ -67,7 +68,7 @@ func (s *RelationServiceImpl) RelationAction(ctx context.Context, req *relation.
 		UserID:     uint(userID),
 		ToUserID:   uint(toUserID),
 		ActionType: uint(req.ActionType),
-		//CreatedAt:  time.Now(),
+		CreatedAt:  uint(time.Now().UnixMilli()),
 	}
 	jsonRc, _ := json.Marshal(relationCache)
 	if err = RelationMq.PublishSimple(ctx, jsonRc); err != nil {

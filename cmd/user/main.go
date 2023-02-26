@@ -5,13 +5,11 @@ import (
 	"net"
 
 	"github.com/bytedance-youthcamp-jbzx/tiktok/cmd/user/service"
-
 	"github.com/bytedance-youthcamp-jbzx/tiktok/kitex/kitex_gen/user/userservice"
 	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/etcd"
 	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/middleware"
 	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/viper"
 	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/zap"
-	"github.com/cloudwego/kitex/pkg/limit"
 	"github.com/cloudwego/kitex/pkg/rpcinfo"
 	"github.com/cloudwego/kitex/server"
 )
@@ -49,7 +47,7 @@ func main() {
 		server.WithMiddleware(middleware.CommonMiddleware),
 		server.WithMiddleware(middleware.ServerMiddleware),
 		server.WithRegistry(r),
-		server.WithLimit(&limit.Option{MaxConnections: 1000, MaxQPS: 100}),
+		//server.WithLimit(&limit.Option{MaxConnections: 1000, MaxQPS: 100}),
 		server.WithMuxTransport(),
 		//server.WithSuite(tracing.NewServerSuite()),
 		server.WithServerBasicInfo(&rpcinfo.EndpointBasicInfo{ServiceName: serviceName}),

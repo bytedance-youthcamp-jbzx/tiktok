@@ -2,6 +2,7 @@ package rabbitmq
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -25,11 +26,12 @@ type RabbitMQ struct {
 	// 通知
 	notifyClose   chan *amqp.Error       // 如果异常关闭，会接收数据
 	notifyConfirm chan amqp.Confirmation // 消息发送成功确认，会接收到数据
+	prefetchCount int
 }
 
 // 创建结构体实例
-func NewRabbitMQ(queueName string, exchange string, key string) *RabbitMQ {
-	return &RabbitMQ{QueueName: queueName, Exchange: exchange, Key: key, Mqurl: MqUrl}
+func NewRabbitMQ(queueName string, exchange string, key string, prefetchCount int) *RabbitMQ {
+	return &RabbitMQ{QueueName: queueName, Exchange: exchange, Key: key, Mqurl: MqUrl, prefetchCount: prefetchCount}
 }
 
 // 断开channel 和 connection
@@ -47,9 +49,9 @@ func (r *RabbitMQ) failOnErr(err error, message string) {
 }
 
 // 创建简单模式下RabbitMQ实例
-func NewRabbitMQSimple(queueName string) *RabbitMQ {
+func NewRabbitMQSimple(queueName string, autoAck bool) *RabbitMQ {
 	// 创建RabbitMQ实例
-	rabbitmq := NewRabbitMQ(queueName, "", "")
+	rabbitmq := NewRabbitMQ(queueName, "", "", config.Viper.GetInt("server.prefetchCount"))
 	var err error
 	// 获取connection
 	rabbitmq.conn, err = amqp.Dial(rabbitmq.Mqurl)
@@ -57,6 +59,11 @@ func NewRabbitMQSimple(queueName string) *RabbitMQ {
 	// 获取channel
 	rabbitmq.channel, err = rabbitmq.conn.Channel()
 	rabbitmq.failOnErr(err, "failed to open a channel")
+	if !autoAck {
+		//创建一个qos控制
+		err = rabbitmq.channel.Qos(rabbitmq.prefetchCount, 0, false)
+		rabbitmq.failOnErr(err, "failed to create a qos")
+	}
 	// 注册监听
 	rabbitmq.channel.NotifyClose(rabbitmq.notifyClose)
 	rabbitmq.channel.NotifyPublish(rabbitmq.notifyConfirm)
@@ -82,6 +89,10 @@ func (r *RabbitMQ) PublishSimple(ctx context.Context, message []byte) error {
 	if err != nil {
 		fmt.Println(err)
 		logger.Errorf("MQ 生产者错误：%v", err.Error())
+		if r.conn.IsClosed() || r.channel.IsClosed() {
+			logger.Errorln("RabbitMQ 连接断开，需要重连")
+			return errors.New("RabbitMQ 连接断开，需要重连：" + err.Error())
+		}
 		return err
 	}
 	// 调用channel 发送消息到队列中
@@ -100,6 +111,10 @@ func (r *RabbitMQ) PublishSimple(ctx context.Context, message []byte) error {
 		})
 	if err != nil {
 		logger.Errorf("MQ 生产者错误：%v", err.Error())
+		if r.conn.IsClosed() || r.channel.IsClosed() {
+			logger.Infoln("RabbitMQ 连接断开，需要重连")
+			return errors.New("RabbitMQ 连接断开，需要重连：" + err.Error())
+		}
 		return err
 	}
 	return nil
@@ -132,7 +147,7 @@ func (r *RabbitMQ) ConsumeSimple() (<-chan amqp.Delivery, error) {
 		// 用来区分多个消费者
 		"", // consumer
 		// 是否自动应答
-		true, // auto-ack
+		config.Viper.GetBool("consumer.favorite.autoAck"), // auto-ack
 		// 是否独有
 		false, // exclusive
 		// 设置为true，表示 不能将同一个Connection中生产者发送的消息传递给这个Connection中的消费者

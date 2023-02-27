@@ -4,6 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/bytedance-youthcamp-jbzx/tiktok/dal/db"
 	"github.com/bytedance-youthcamp-jbzx/tiktok/dal/redis"
 	favorite "github.com/bytedance-youthcamp-jbzx/tiktok/kitex/kitex_gen/favorite"
@@ -12,9 +15,6 @@ import (
 	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/minio"
 	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/rabbitmq"
 	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/zap"
-	amqp "github.com/rabbitmq/amqp091-go"
-	"strings"
-	"time"
 )
 
 // FavoriteServiceImpl implements the last service interface defined in the IDL.
@@ -46,12 +46,17 @@ func (s *FavoriteServiceImpl) FavoriteAction(ctx context.Context, req *favorite.
 	fmt.Println("Publish new message: ", fc)
 	if err = FavoriteMq.PublishSimple(ctx, jsonFC); err != nil {
 		logger.Errorf("消息队列发布错误：%v", err.Error())
-		if strings.Contains(err.Error(), amqp.ErrClosed.Reason) {
+		if strings.Contains(err.Error(), "连接断开") {
 			// 检测到通道关闭，则重连
-			FavoriteMq.Destroy()
-			FavoriteMq = rabbitmq.NewRabbitMQSimple("favorite")
+			go FavoriteMq.Destroy()
+			FavoriteMq = rabbitmq.NewRabbitMQSimple("favorite", autoAck)
 			logger.Errorln("消息队列通道尝试重连：favorite")
 			go consume()
+			res := &favorite.FavoriteActionResponse{
+				StatusCode: 0,
+				StatusMsg:  "success",
+			}
+			return res, nil
 		}
 		res := &favorite.FavoriteActionResponse{
 			StatusCode: -1,

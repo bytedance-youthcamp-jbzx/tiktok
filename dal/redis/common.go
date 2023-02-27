@@ -49,7 +49,9 @@ func setKey(ctx context.Context, key string, value string, expireTime time.Durat
 	_, err := GetRedisHelper().Set(ctx, key, value, expireTime).Result()
 	errUnlock := UnlockByMutex(ctx, mutex)
 	if errUnlock != nil {
-		return errors.New("unlock failed: " + errUnlock.Error())
+		zapLogger.Errorf("unlock failed: %s", errUnlock.Error())
+
+		return errUnlock
 	}
 	if err != nil {
 		return errors.New("Redis set key failed: " + err.Error())

@@ -5,13 +5,16 @@ import (
 	"github.com/bytedance-youthcamp-jbzx/tiktok/internal/tool"
 	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/jwt"
 	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/rabbitmq"
+	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/viper"
 	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/zap"
 )
 
 var (
 	Jwt        *jwt.JWT
 	logger     = zap.InitLogger()
-	RelationMq = rabbitmq.NewRabbitMQSimple("relation")
+	config     = viper.Init("rabbitmq")
+	autoAck    = config.Viper.GetBool("consumer.relation.autoAck")
+	RelationMq = rabbitmq.NewRabbitMQSimple("relation", autoAck)
 	err        error
 	privateKey string
 )

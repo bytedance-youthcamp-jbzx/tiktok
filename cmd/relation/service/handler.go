@@ -11,7 +11,6 @@ import (
 	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/minio"
 	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/rabbitmq"
 	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/zap"
-	amqp "github.com/rabbitmq/amqp091-go"
 	"strings"
 	"time"
 )
@@ -73,12 +72,17 @@ func (s *RelationServiceImpl) RelationAction(ctx context.Context, req *relation.
 	jsonRc, _ := json.Marshal(relationCache)
 	if err = RelationMq.PublishSimple(ctx, jsonRc); err != nil {
 		logger.Errorf("消息队列发布错误：%v", err.Error())
-		if strings.Contains(err.Error(), amqp.ErrClosed.Reason) {
+		if strings.Contains(err.Error(), "连接断开") {
 			// 检测到通道关闭，则重连
-			RelationMq.Destroy()
-			RelationMq = rabbitmq.NewRabbitMQSimple("relation")
+			go RelationMq.Destroy()
+			RelationMq = rabbitmq.NewRabbitMQSimple("relation", autoAck)
 			logger.Errorln("消息队列通道尝试重连：relation")
 			go consume()
+			res := &relation.RelationActionResponse{
+				StatusCode: 0,
+				StatusMsg:  "success",
+			}
+			return res, nil
 		}
 		res := &relation.RelationActionResponse{
 			StatusCode: -1,

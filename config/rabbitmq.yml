@@ -5,3 +5,11 @@ server:
   username: tiktokRMQ
   password: tiktokRMQ
   vhost: tiktokRMQ
+
+consumer:
+  favorite:
+    autoAck: true
+    prefetchCount: 1000
+  relation:
+    autoAck: true
+    prefetchCount: 1000

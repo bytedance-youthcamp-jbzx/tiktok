@@ -55,6 +55,13 @@ func consume() error {
 		//	logger.Errorf("Redis mutex unlock error: %s", err.Error())
 		//	return err
 		//}
+		if !autoAck {
+			err := msg.Ack(true)
+			if err != nil {
+				logger.Errorf("ack error: %s", err.Error())
+				return err
+			}
+		}
 	}
 	return nil
 }

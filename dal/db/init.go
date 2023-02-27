@@ -3,9 +3,9 @@ package db
 
 import (
 	"fmt"
-
 	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/zap"
 	"gorm.io/gorm/logger"
+	"time"
 
 	"github.com/bytedance-youthcamp-jbzx/tiktok/pkg/viper"
 	"gorm.io/driver/mysql"
@@ -69,8 +69,9 @@ func init() {
 	if err != nil {
 		zapLogger.Fatalln(err.Error())
 	}
-	db.SetMaxOpenConns(100)
+	db.SetMaxOpenConns(1000)
 	db.SetMaxIdleConns(20)
+	db.SetConnMaxLifetime(60 * time.Minute)
 }
 
 func GetDB() *gorm.DB {

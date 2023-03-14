@@ -1,5 +1,5 @@
 # 5th-bytedance-youth-camp-tiktok
-降本增效队 — 极简版抖音
+极简版抖音 — 降本增效队
 
 # 一、项目介绍
 
